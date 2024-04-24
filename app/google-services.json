@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "845602012512",
+    "project_id": "kaa-properties",
+    "storage_bucket": "kaa-properties.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845602012512:android:e591d35df99c7173faf205",
+        "android_client_info": {
+          "package_name": "com.example.kaaproperties"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoH91RXqKiZwmt1mzGpL6-nNpwqUudcAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
