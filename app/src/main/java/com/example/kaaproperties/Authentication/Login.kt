@@ -65,6 +65,6 @@ fun LoginLayout(onLogin: (email: String, password: String) -> Unit) {
 }
 
 @Composable
-fun Login(modifier: Modifier = Modifier.fillMaxSize(),navController: NavController) {
+fun LoginUser(modifier: Modifier = Modifier.fillMaxSize(),navController: NavController) {
     LoginLayout(onLogin = {email: String, password: String ->  })
 }

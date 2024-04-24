@@ -1,5 +1,6 @@
 package com.example.kaaproperties.Authentication
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Patterns
@@ -20,9 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,13 +33,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
-import kotlinx.coroutines.delay
-import java.io.Serializable
+import com.example.kaaproperties.UserData
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 
+
+
+private lateinit var auth: FirebaseAuth
+@SuppressLint("StaticFieldLeak")
+private lateinit var firebaseFirestore: FirebaseFirestore
+private lateinit var storageRef: StorageReference
 @Composable
 fun RegistrationUI(
-    OnRegister: (email: String, password: String, username: String, profilePic: Uri?, address: String, age: String) -> Unit,
+    onRegister: (email: String, password: String, username: String, profilePic: Uri?, address: String, age: String) -> Unit,
     context: Context = LocalContext.current
 ) {
     var email by remember {
@@ -109,26 +120,36 @@ fun RegistrationUI(
         Spacer(modifier = Modifier.height(10.dp))
 
         Button(onClick = {
-            val passwordValidation = validatePassword(password, context)
-            if ( passwordValidation && Patterns.EMAIL_ADDRESS.matcher(email).matches()){
-                OnRegister(email,password,username,profilePic,address,age )
-            }else{
-                isPasswordValid = false
-            }
-            }
+//            validatePassword(password, context)
+//            validateEmail(email, context)
+//            val passwordvalidation = validatePassword(password, context)
+//            val emailvalidation = validateEmail(email, context)
+//            if (passwordvalidation && emailvalidation){
+//
+//            }
+//            }
+            onRegister(
+                email, password, username, profilePic, address, age
+            )
+        }
         ) {
+            Text(text = "Register")
+        }
 
-        }
-        if(!isPasswordValid){
-            LaunchedEffect(Unit) {
-                Toast.makeText(context, "Check your email address", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
 
 }
 
+fun validateEmail(email: String, context: Context): Boolean{
+    return if ( Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+        true
+    }else{
+        Toast.makeText(context, "Check your email Address", Toast.LENGTH_SHORT).show()
+        false
+    }
+
+}
 fun validatePassword(pwd: String, context: Context): Boolean{
     val ERR_LEN = "Password must have at least eight characters!"
     val ERR_WHITESPACE = "Password must not contain whitespace!"
@@ -191,8 +212,86 @@ fun ImagePicker(onCalled: (selectedImage: Uri) -> Unit){
 }
 
 
+
 @Composable
-fun Register(modifier: Modifier = Modifier.fillMaxSize(),navController: NavController) {
-    RegistrationUI (OnRegister = {email: String, password: String, username: String, profilePic: Uri?, address: String, age: String ->  })
+fun RegisterUser(
+    context: Context = LocalContext.current,
+    navController: NavController
+) {
+    RegistrationUI(onRegister = { email, password, username, profilePic, address, age ->  registerUser(email, password, username, profilePic, address, age, context, navController) })
+}
+
+fun registerUser(
+    email: String, password: String, username: String, profilePic: Uri?, address: String, age: String,
+    context: Context, navController: NavController
+) {
+    initVar()
+    auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener{authenticatingtask->
+            if(authenticatingtask.isSuccessful){
+                saveUserData(userId = auth.currentUser?.uid ?:"", email,username, profilePic, address, age, context, navController)/*Initial - giving this error: Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type FirebaseUser?*/
+//                auth.currentUser?.let { saveUserData(it.uid, email,username, profilePic, address, age, context, navController)}
+                Toast.makeText(context, "You have created your account successfully", Toast.LENGTH_SHORT).show()
+            }else{
+                Toast.makeText(context, authenticatingtask.exception?.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+}
+
+fun saveUserData(
+    userId: String,
+    email: String,
+    username: String,
+    profilePic: Uri?,
+    address: String,
+    age: String,
+    context: Context,
+    navController: NavController
+) {
+    initVar()
+    storageRef = storageRef.child(System.currentTimeMillis().toString())
+    profilePic?.let {
+        storageRef.putFile(it)
+            .addOnCompleteListener{AddingtoStorageTask->
+                if (AddingtoStorageTask.isSuccessful){
+                    storageRef.downloadUrl.addOnSuccessListener { uri->
+                        val map = HashMap<String, Any>()
+                        map["pic"] = uri.toString()
+                        val UserData =
+                            UserData(
+                                userID = userId,
+                                email = email,
+                                username = username,
+                                profilePic = map,
+                                address = address,
+                                age = age,
+                            )
+                        val dbUserData: DocumentReference = firebaseFirestore.collection("Users").document(userId)
+                        dbUserData.set(UserData)
+                            .addOnCompleteListener{
+                                if (it.isSuccessful){
+                                    Toast.makeText(context,"Created user profile successfully", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(Screens.LoginScreen.route)
+                                }else{
+                                    Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
+
+                                }
+                            }
+                    }
+                }else{
+                    Toast.makeText(context,AddingtoStorageTask.exception?.message, Toast.LENGTH_SHORT).show()
+
+                }
+            }
+
+    }
+
+}
+
+
+fun initVar() {
+    storageRef = FirebaseStorage.getInstance().reference.child("Images")
+    firebaseFirestore = FirebaseFirestore.getInstance()
+    auth = FirebaseAuth.getInstance()
 
 }
