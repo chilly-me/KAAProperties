@@ -6,20 +6,36 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.kaaproperties.Authentication.LoginUser
 import com.example.kaaproperties.Authentication.RegisterUser
-import com.example.kaaproperties.UserInformationsPage.UserProfileScreen
+import com.example.kaaproperties.Events
+import com.example.kaaproperties.room.entities.states
+import com.example.kaaproperties.screens.AddingLocation
+import com.example.kaaproperties.screens.ListofLocations
+import com.example.kaaproperties.screens.UserProfileScreen
 
 @Composable
-fun Navigation() {
+fun Navigation(
+    onEvents: (Events) -> Unit,
+    states: states
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screens.SignUp.route){
-        composable(route = Screens.SignUp.route){
+    NavHost(navController = navController, startDestination = Screens.Locations.route) {
+        composable(route = Screens.SignUp.route) {
             RegisterUser(navController = navController)
         }
-        composable(route = Screens.LoginScreen.route){
+        composable(route = Screens.LoginScreen.route) {
             LoginUser(navController = navController)
         }
-        composable(route = Screens.UserDetails.route){
+        composable(route = Screens.UserDetails.route) {
             UserProfileScreen(navController = navController)
+        }
+        composable(route = Screens.Locations.route) {
+            ListofLocations(states = states, onEvents = onEvents, navController = navController)
+        }
+        composable(route = Screens.AddingLocations.route) {
+            AddingLocation(states = states, onEvent = onEvents, navController = navController)
+        }
+        composable(route = Screens.Property.route) {
+            AddingLocation(states = states, onEvent = onEvents, navController = navController)
         }
     }
 
