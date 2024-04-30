@@ -1,5 +1,9 @@
 package com.example.kaaproperties
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaaproperties.room.dao.PropertyDao
@@ -12,6 +16,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
+
+    var firsTime by mutableStateOf(true)
+    var _firstTime = true
     private val _state = MutableStateFlow(states())
     val state = _state
 

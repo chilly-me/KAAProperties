@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.view.textclassifier.TextLinks.TextLink
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -31,7 +33,7 @@ private lateinit var auth: FirebaseAuth
 
 @SuppressLint("StaticFieldLeak")
 private lateinit var firebaseFirestore: FirebaseFirestore
-
+var isLoading: Boolean = false
 @Composable
 fun LoginLayout(
     onLogin: (email: String, password: String) -> Unit, navController: NavController
@@ -58,8 +60,22 @@ fun LoginLayout(
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
         Spacer(modifier = Modifier.height(10.dp))
 
-        Button(onClick = { onLogin(email, password) }) {
-            Text(text = "Login In")
+
+        AnimatedVisibility(visible = isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(20.dp)
+            )
+
+        }
+
+        Button(
+            onClick = {
+            onLogin(email, password)
+            isLoading = true
+        },
+            enabled = !isLoading
+        ) {
+            Text(text = "Login")
         }
 
 
@@ -90,16 +106,17 @@ fun loginUser(
 fun LoginUser(email: String, password: String, context: Context, navController: NavController) {
     auth = FirebaseAuth.getInstance()
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { authenticatingTask ->
+        isLoading = false
         if (authenticatingTask.isSuccessful) {
             Toast.makeText(
                 context, "You have logged into your account successfully", Toast.LENGTH_SHORT
             ).show()
+            navController.popBackStack()
             navController.navigate(route = "location_screen")
         } else {
             Toast.makeText(context, authenticatingTask.exception?.message, Toast.LENGTH_SHORT)
                 .show()
         }
-
     }
 
 }
