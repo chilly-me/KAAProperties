@@ -133,13 +133,13 @@ fun RegistrationUI(
         TextField(
             value = address,
             onValueChange = { address = it },
-            label = { Text("Username") }
+            label = { Text("Address") }
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
             value = age,
             onValueChange = { age = it },
-            label = { Text("Username") }
+            label = { Text("Age") }
         )
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -230,7 +230,7 @@ fun saveUserData(
                             .addOnCompleteListener{
                                 if (it.isSuccessful){
                                     Toast.makeText(context,"Created user profile successfully", Toast.LENGTH_SHORT).show()
-                                    navController.navigate(Screens.UserDetails.route)
+                                    navController.navigate(Screens.Locations.route)
                                 }else{
                                     Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
 
@@ -253,6 +253,7 @@ fun registerUser(
 ) {
     initVar()
     auth.createUserWithEmailAndPassword(email, password)
+
         .addOnCompleteListener{authenticatingtask->
             if(authenticatingtask.isSuccessful){
                 saveUserData(userId = auth.currentUser?.uid ?:"", email,username, profilePic, address, age, context, navController)/*Initial - giving this error: Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type FirebaseUser?*/

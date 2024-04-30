@@ -1,7 +1,10 @@
 package com.example.kaaproperties.Authentication
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.view.textclassifier.TextLinks.TextLink
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,9 +24,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
+private lateinit var auth: FirebaseAuth
+
+@SuppressLint("StaticFieldLeak")
+private lateinit var firebaseFirestore: FirebaseFirestore
 
 @Composable
-fun LoginLayout(onLogin: (email: String, password: String) -> Unit) {
+fun LoginLayout(
+    onLogin: (email: String, password: String) -> Unit, navController: NavController
+) {
     var email by remember {
         mutableStateOf("")
     }
@@ -41,30 +53,53 @@ fun LoginLayout(onLogin: (email: String, password: String) -> Unit) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") }
-        )
+        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         Spacer(modifier = Modifier.height(10.dp))
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") }
-        )
+        TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
         Spacer(modifier = Modifier.height(10.dp))
-        
-        Button(onClick = {onLogin(email, password)}) {
-            
+
+        Button(onClick = { onLogin(email, password) }) {
+            Text(text = "Login In")
         }
 
 
-        Text(text = "Don't have an account create one here", Modifier.clickable {  })
+        Text(text = "Don't have an account create one here",
+            Modifier.clickable { navController.navigate(route = "sign_up_screen") })
 
     }
 }
 
 @Composable
-fun LoginUser(modifier: Modifier = Modifier.fillMaxSize(),navController: NavController) {
-    LoginLayout(onLogin = {email: String, password: String ->  })
+fun loginUser(
+    modifier: Modifier = Modifier.fillMaxSize(), navController: NavController, context: Context
+) {
+    LoginLayout(
+        onLogin = { email: String, password: String ->
+            if (email.isEmpty()) {
+                Toast.makeText(context, "Cannot login with empty email", Toast.LENGTH_SHORT).show()
+            }else if (password.isEmpty()){
+                Toast.makeText(context,"Check your password", Toast.LENGTH_SHORT).show()
+            }else{
+                LoginUser(email, password, context, navController)
+            }
+        }, navController
+    )
+}
+
+
+fun LoginUser(email: String, password: String, context: Context, navController: NavController) {
+    auth = FirebaseAuth.getInstance()
+    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { authenticatingTask ->
+        if (authenticatingTask.isSuccessful) {
+            Toast.makeText(
+                context, "You have logged into your account successfully", Toast.LENGTH_SHORT
+            ).show()
+            navController.navigate(route = "location_screen")
+        } else {
+            Toast.makeText(context, authenticatingTask.exception?.message, Toast.LENGTH_SHORT)
+                .show()
+        }
+
+    }
+
 }

@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">KAA Properties</string>
     <string name="title_activity_authentication">Authentication</string>
+    <string name="title_activity_adding_locations">AddingLocations</string>
 </resources>
