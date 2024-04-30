@@ -16,6 +16,7 @@ interface Events {
 
     data class selectProperty(val propertyId: Int): Events
 
+
     data class setLocationName(val locationName: String): Events
     data class setLocationDescription(val locationDescription: String): Events
     data class setPropertyName(val propertyName: String): Events

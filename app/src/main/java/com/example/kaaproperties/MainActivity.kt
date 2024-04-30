@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.example.kaaproperties.Authentication.RegistrationUI
+import com.example.kaaproperties.Authentication.loginUser
 import com.example.kaaproperties.Authentication.saveUserData
 import com.example.kaaproperties.Navigation.Navigation
 import com.example.kaaproperties.room.database.PropertyDatabase
@@ -93,6 +95,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val state by viewModel.state.collectAsState()
 //                    AddingLocation(states = state, onEvent = viewModel::onEvent)
+
                     Navigation(states = state, onEvents = viewModel::onEvent, context = LocalContext.current)
 
 
