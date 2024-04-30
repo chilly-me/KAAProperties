@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.kaaproperties.Authentication.LoginUser
 import com.example.kaaproperties.Authentication.RegisterUser
+import com.example.kaaproperties.UserInformationsPage.UserProfileScreen
 
 @Composable
 fun Navigation() {
@@ -16,6 +17,9 @@ fun Navigation() {
         }
         composable(route = Screens.LoginScreen.route){
             LoginUser(navController = navController)
+        }
+        composable(route = Screens.UserDetails.route){
+            UserProfileScreen(navController = navController)
         }
     }
 

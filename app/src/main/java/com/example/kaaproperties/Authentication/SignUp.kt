@@ -37,7 +37,6 @@ import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.UserData
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -84,8 +83,33 @@ fun RegistrationUI(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ImagePicker(onCalled = { selectedImage: Uri -> profilePic = selectedImage })
+        val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
+            profilePic = it
+        }
 
+        if (profilePic == null) {
+            Image(
+                painter = painterResource(id = R.drawable.profile),
+                contentDescription = "Profile Image",
+                Modifier
+                    .clip(CircleShape)
+                    .size(150.dp)
+                    .clickable {
+                        launcher.launch("image/*")
+                    }
+            )
+        }else{
+            Image(
+                painter = rememberAsyncImagePainter(profilePic),
+                contentDescription = "Profile Image",
+                Modifier
+                    .clip(CircleShape)
+                    .size(150.dp)
+                    .clickable {
+                        launcher.launch("image/*")
+                    }
+            )
+        }
         Spacer(modifier = Modifier.height(10.dp))
 
         TextField(
@@ -120,17 +144,16 @@ fun RegistrationUI(
         Spacer(modifier = Modifier.height(10.dp))
 
         Button(onClick = {
-//            validatePassword(password, context)
-//            validateEmail(email, context)
-//            val passwordvalidation = validatePassword(password, context)
-//            val emailvalidation = validateEmail(email, context)
-//            if (passwordvalidation && emailvalidation){
-//
-//            }
-//            }
-            onRegister(
-                email, password, username, profilePic, address, age
-            )
+            validatePassword(password, context)
+            validateEmail(email, context)
+            val passwordvalidation = validatePassword(password, context)
+            val emailvalidation = validateEmail(email, context)
+            if (passwordvalidation && emailvalidation){
+                onRegister(
+                    email, password, username, profilePic, address, age
+                )
+            }
+
         }
         ) {
             Text(text = "Register")
@@ -157,57 +180,11 @@ fun validatePassword(pwd: String, context: Context): Boolean{
     val ERR_UPPER = "Password must have at least one uppercase letter!"
     val ERR_SPECIAL = "Password must have at least one special character, such as: _%-=+#@"
 
-    if (pwd.length >=8){
+    if (pwd.length <=8){
         Toast.makeText(context, ERR_LEN, Toast.LENGTH_SHORT).show()
-        return false
-    }else if(pwd.none{it.isWhitespace()}){
-        Toast.makeText(context, ERR_WHITESPACE, Toast.LENGTH_SHORT).show()
-        return false
-    }else if(pwd.any { it.isDigit() }){
-        Toast.makeText(context, ERR_DIGIT, Toast.LENGTH_SHORT).show()
-        return false
-    }else if(pwd.any { it.isUpperCase() }){
-        Toast.makeText(context, ERR_UPPER, Toast.LENGTH_SHORT).show()
-        return false
-    }else if(pwd.any { !it.isLetterOrDigit() }){
-        Toast.makeText(context, ERR_SPECIAL, Toast.LENGTH_SHORT).show()
         return false
     }else {
         return true
-    }
-}
-
-@Composable
-fun ImagePicker(onCalled: (selectedImage: Uri) -> Unit){
-    var selectedImage by remember {
-        mutableStateOf<Uri?>(null)
-    }
-    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
-        selectedImage = it
-    }
-
-    if (selectedImage == null) {
-        Image(
-            painter = painterResource(id = R.drawable.profile),
-            contentDescription = "Profile Image",
-            Modifier
-                .clip(CircleShape)
-                .size(150.dp)
-                .clickable {
-                    launcher.launch("image/*")
-                }
-        )
-    }else{
-        Image(
-            painter = rememberAsyncImagePainter(selectedImage),
-            contentDescription = "Profile Image",
-            Modifier
-                .clip(CircleShape)
-                .size(150.dp)
-                .clickable {
-                    launcher.launch("image/*")
-                }
-        )
     }
 }
 
@@ -219,6 +196,55 @@ fun RegisterUser(
     navController: NavController
 ) {
     RegistrationUI(onRegister = { email, password, username, profilePic, address, age ->  registerUser(email, password, username, profilePic, address, age, context, navController) })
+}
+
+fun saveUserData(
+    userId: String,
+    email: String,
+    username: String,
+    profilePic: Uri?,
+    address: String,
+    age: String,
+    context: Context,
+    navController: NavController
+) {
+    initVar()
+    storageRef = storageRef.child(System.currentTimeMillis().toString())
+    profilePic?.let {
+        storageRef.putFile(it)
+            .addOnCompleteListener{StorageTask->
+                if (StorageTask.isSuccessful){
+                    storageRef.downloadUrl.addOnSuccessListener { uri->
+                        val map = uri.toString()
+                        val UserData =
+                            UserData(
+                                userID = userId,
+                                email = email,
+                                username = username,
+                                profilePic = map,
+                                address = address,
+                                age = age,
+                            )
+                        val dbUserData: DocumentReference = firebaseFirestore.collection("Users").document(userId)
+                        dbUserData.set(UserData)
+                            .addOnCompleteListener{
+                                if (it.isSuccessful){
+                                    Toast.makeText(context,"Created user profile successfully", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(Screens.UserDetails.route)
+                                }else{
+                                    Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
+
+                                }
+                            }
+                    }
+                }else{
+                    Toast.makeText(context,StorageTask.exception?.message, Toast.LENGTH_SHORT).show()
+
+                }
+            }
+
+    }
+
 }
 
 fun registerUser(
@@ -238,60 +264,10 @@ fun registerUser(
         }
 }
 
-fun saveUserData(
-    userId: String,
-    email: String,
-    username: String,
-    profilePic: Uri?,
-    address: String,
-    age: String,
-    context: Context,
-    navController: NavController
-) {
-    initVar()
-    storageRef = storageRef.child(System.currentTimeMillis().toString())
-    profilePic?.let {
-        storageRef.putFile(it)
-            .addOnCompleteListener{AddingtoStorageTask->
-                if (AddingtoStorageTask.isSuccessful){
-                    storageRef.downloadUrl.addOnSuccessListener { uri->
-                        val map = HashMap<String, Any>()
-                        map["pic"] = uri.toString()
-                        val UserData =
-                            UserData(
-                                userID = userId,
-                                email = email,
-                                username = username,
-                                profilePic = map,
-                                address = address,
-                                age = age,
-                            )
-                        val dbUserData: DocumentReference = firebaseFirestore.collection("Users").document(userId)
-                        dbUserData.set(UserData)
-                            .addOnCompleteListener{
-                                if (it.isSuccessful){
-                                    Toast.makeText(context,"Created user profile successfully", Toast.LENGTH_SHORT).show()
-                                    navController.navigate(Screens.LoginScreen.route)
-                                }else{
-                                    Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
-
-                                }
-                            }
-                    }
-                }else{
-                    Toast.makeText(context,AddingtoStorageTask.exception?.message, Toast.LENGTH_SHORT).show()
-
-                }
-            }
-
-    }
-
-}
-
 
 fun initVar() {
-    storageRef = FirebaseStorage.getInstance().reference.child("Images")
     firebaseFirestore = FirebaseFirestore.getInstance()
     auth = FirebaseAuth.getInstance()
+    storageRef = FirebaseStorage.getInstance().reference.child("Images")
 
 }
