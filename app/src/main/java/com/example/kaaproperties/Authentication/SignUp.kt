@@ -141,7 +141,7 @@ fun RegistrationUI(
             onValueChange = { age = it },
             label = { Text("Age") }
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(11.dp))
 
         Button(onClick = {
             validatePassword(password, context)
