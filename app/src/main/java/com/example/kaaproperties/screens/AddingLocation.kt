@@ -17,12 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.kaaproperties.Events
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.MainActivity
-import com.example.kaaproperties.room.entities.states
+import com.example.kaaproperties.logic.states
 
 @OptIn(ExperimentalMaterial3Api::class)
-
 @Composable
 fun AddingLocation(
     onEvent: (Events) -> Unit,
@@ -31,7 +30,10 @@ fun AddingLocation(
     context: Context
 ) {
     AlertDialog(
-        onDismissRequest = { navController.navigate(route = "location_screen") },
+        onDismissRequest = {
+            navController.popBackStack()
+            navController.navigate(route = "location_screen")
+        },
         title = { Text(text = "Add Location")},
         text = {
                Column(verticalArrangement = Arrangement.spacedBy(20.dp), modifier = Modifier.padding(10.dp)) {
@@ -66,7 +68,10 @@ fun AddingLocation(
                 }) {
                     Text("Save Location")
                 }
-                Button(onClick = { navController.navigate(route = "location_screen") }) {
+                Button(onClick = {
+                    navController.popBackStack()
+                    navController.navigate(route = "location_screen")
+                }) {
                     Text(text = "Dismisss")
                 }
             }

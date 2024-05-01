@@ -2,16 +2,16 @@ package com.example.kaaproperties
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
-import com.example.kaaproperties.room.entities.states
+import com.example.kaaproperties.logic.states
+import com.example.kaaproperties.room.entities.tenant
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -153,16 +153,21 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
 
             }
             is Events.saveTenant ->{
+                val fullName = _state.value.fullName
+                val email = _state.value.email
+                val phoneNumber = _state.value.phoneNumber
+                val propertyId = _state.value.propertyId
 
-            }
-            is Events.Adding ->{
+                val tenant = tenant(fullName, email, phoneNumber, propertyId)
+
+                viewModelScope.launch {
+                    dao.insertTenant(tenant)
+                }
                 _state.update { it.copy(
-                    isAdding = true
-                ) }
-            }
-            is Events.NotAdding ->{
-                _state.update { it.copy(
-                    isAdding = false
+                    fullName = "",
+                    email = "",
+                    phoneNumber = "",
+                    propertyId = 0
                 ) }
             }
 

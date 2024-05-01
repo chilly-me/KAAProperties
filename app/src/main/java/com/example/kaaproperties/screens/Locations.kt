@@ -30,10 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.kaaproperties.Events
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
-import com.example.kaaproperties.room.entities.states
+import com.example.kaaproperties.logic.states
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -2,11 +2,13 @@ package com.example.kaaproperties.Authentication
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -33,9 +36,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.kaaproperties.Navigation.Screens
+import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.R
-import com.example.kaaproperties.UserData
+import com.example.kaaproperties.logic.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,6 +51,7 @@ private lateinit var auth: FirebaseAuth
 @SuppressLint("StaticFieldLeak")
 private lateinit var firebaseFirestore: FirebaseFirestore
 private lateinit var storageRef: StorageReference
+var _isLoading = false
 @Composable
 fun RegistrationUI(
     onRegister: (email: String, password: String, username: String, profilePic: Uri?, address: String, age: String) -> Unit,
@@ -143,7 +147,15 @@ fun RegistrationUI(
         )
         Spacer(modifier = Modifier.height(11.dp))
 
+        AnimatedVisibility(visible = _isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(20.dp)
+            )
+
+        }
+
         Button(onClick = {
+            _isLoading = true
             validatePassword(password, context)
             validateEmail(email, context)
             val passwordvalidation = validatePassword(password, context)
@@ -154,7 +166,8 @@ fun RegistrationUI(
                 )
             }
 
-        }
+        },
+            enabled = !_isLoading
         ) {
             Text(text = "Register")
         }
@@ -230,9 +243,11 @@ fun saveUserData(
                             .addOnCompleteListener{
                                 if (it.isSuccessful){
                                     Toast.makeText(context,"Created user profile successfully", Toast.LENGTH_SHORT).show()
-                                    navController.navigate(Screens.Locations.route)
+                                    val intent = Intent(context, MainActivity::class.java)
+                                    context.startActivity(intent)
                                 }else{
                                     Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
+                                    _isLoading = false
 
                                 }
                             }
@@ -259,8 +274,10 @@ fun registerUser(
                 saveUserData(userId = auth.currentUser?.uid ?:"", email,username, profilePic, address, age, context, navController)/*Initial - giving this error: Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type FirebaseUser?*/
 //                auth.currentUser?.let { saveUserData(it.uid, email,username, profilePic, address, age, context, navController)}
                 Toast.makeText(context, "You have created your account successfully", Toast.LENGTH_SHORT).show()
+
             }else{
                 Toast.makeText(context, authenticatingtask.exception?.message, Toast.LENGTH_SHORT).show()
+                _isLoading = false
             }
         }
 }

@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.kaaproperties.Events
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.Navigation.Screens
-import com.example.kaaproperties.room.entities.states
+import com.example.kaaproperties.logic.states
 
 @Composable
 fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavController, locationId: String, context: Context) {
@@ -32,7 +32,10 @@ fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavC
     onEvent(Events.setlocationId(_locationId))
 
     AlertDialog(
-        onDismissRequest = { navController.navigate(Screens.Property.withArgs(locationId)) },
+        onDismissRequest = {
+            navController.popBackStack()
+            navController.navigate(Screens.Property.withArgs(locationId))
+        },
         title = { Text(text = "Add Property") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(20.dp), modifier = Modifier.padding(10.dp)) {
@@ -87,12 +90,15 @@ fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavC
                     onEvent(Events.saveProperty)
                     val intent = Intent(context, MainActivity::class.java)
                     context.startActivity(intent)
-                    navController.navigate(Screens.Property.withArgs(locationId))
 
                 }) {
                     Text("Save Location")
                 }
-                Button(onClick = { navController.navigate(Screens.Property.withArgs(locationId)) }) {
+                Button(onClick = {
+                    navController.popBackStack()
+                    navController.navigate(Screens.Property.withArgs(locationId))
+
+                }) {
                     Text(text = "Dismisss")
                 }
             }

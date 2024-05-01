@@ -2,6 +2,7 @@ package com.example.kaaproperties.Authentication
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.view.textclassifier.TextLinks.TextLink
 import android.widget.Toast
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.kaaproperties.MainActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -111,11 +113,12 @@ fun LoginUser(email: String, password: String, context: Context, navController: 
             Toast.makeText(
                 context, "You have logged into your account successfully", Toast.LENGTH_SHORT
             ).show()
-            navController.popBackStack()
-            navController.navigate(route = "location_screen")
+            val intent = Intent(context, MainActivity::class.java)
+            context.startActivity(intent)
         } else {
             Toast.makeText(context, authenticatingTask.exception?.message, Toast.LENGTH_SHORT)
                 .show()
+            isLoading = false
         }
     }
 

@@ -1,4 +1,8 @@
-package com.example.kaaproperties.room.entities
+package com.example.kaaproperties.logic
+
+import com.example.kaaproperties.room.entities.location
+import com.example.kaaproperties.room.entities.property
+import com.example.kaaproperties.room.entities.tenant
 
 data class states(
     val locations: List<location> = emptyList(),
@@ -15,5 +19,4 @@ data class states(
     val email: String = "",
     val phoneNumber: String = "",
     val propertyId: Int = 0,
-    val isAdding: Boolean = false
 )

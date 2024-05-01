@@ -1,4 +1,4 @@
-package com.example.kaaproperties
+package com.example.kaaproperties.logic
 
 data class UserData(
     val userID: String = "",

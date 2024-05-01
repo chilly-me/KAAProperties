@@ -1,8 +1,4 @@
-package com.example.kaaproperties
-
-import com.example.kaaproperties.room.entities.location
-import com.example.kaaproperties.room.entities.property
-import com.example.kaaproperties.room.entities.tenant
+package com.example.kaaproperties.logic
 
 interface Events {
     data class selectLocation(val locationId: Int): Events
