@@ -1,6 +1,7 @@
 package com.example.kaaproperties.room.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,11 +15,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PropertyDao {
-    @Query("DELETE FROM tenant")
-    suspend fun nukeTable()
 
-    @Query("DELETE FROM property")
-    suspend fun nukeTable2()
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocation(location: location)
 
@@ -27,11 +24,32 @@ interface PropertyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTenant(tenant: tenant)
+
+    @Query("DELETE FROM tenant")
+    suspend fun deleteAllTenants()
+
+    @Query("DELETE FROM property")
+    suspend fun deleteAllProperties()
+
+    @Query("DELETE FROM location")
+    suspend fun deleteAllLocations()
+    @Delete
+    suspend fun deleteLocation(location: location)
+
+    @Delete
+    suspend fun deleteProperty(property: property)
+
+    @Delete
+    suspend fun deleteTenant(tenant: tenant)
+
     @Query("SELECT * FROM location")
     suspend fun getAllLocations(): List<location>
 
     @Query("SELECT * FROM property")
     suspend fun getAllProperties(): List<property>
+
+    @Query("SELECT * FROM tenant")
+    suspend fun getAllTenants(): List<tenant>
 
 
     @Transaction

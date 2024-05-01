@@ -36,17 +36,36 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
                 }
             }
             is Events.showProperies ->{
+                viewModelScope.launch {
+                    val allProperties = dao.getAllProperties()
+                    _state.update { it.copy(
+                        property = allProperties
+                    ) }
+                }
 
+            }
+            is Events.showTenants ->{
+                viewModelScope.launch {
+                    val allTenants = dao.getAllTenants()
+                    _state.update { it.copy(
+                        tenants = allTenants
+                    ) }
+                }
 
             }
             is Events.selectLocation ->{
-
+                viewModelScope.launch {
+                    val propertyList = dao.getLocationWithProperties(events.locationId).flatMap { it.properties }
+                    _state.update { it.copy(
+                        property = propertyList
+                    ) }
+                }
             }
             is Events.selectProperty ->{
                 viewModelScope.launch {
-                    val propertyList = dao.getLocationWithProperties(events.propertyId).flatMap { it.properties }
+                    val tenantsList = dao.getPropertyWithTenants(events.propertyId).flatMap { it.tenants }
                     _state.update { it.copy(
-                        property = propertyList
+                        tenants = tenantsList
                     ) }
                 }
             }
@@ -169,6 +188,33 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
                     phoneNumber = "",
                     propertyId = 0
                 ) }
+            }
+            is Events.Adding ->{
+                _state.update {it.copy(
+                    isAdding = true
+                )
+                }
+            }
+            is Events.NotAdding ->{
+                _state.update { it.copy(
+                    isAdding = false
+                )
+                }
+            }
+            is Events.deleteLocation ->{
+                viewModelScope.launch {
+                    dao.deleteLocation(events.location)
+                }
+            }
+            is Events.deleteProperty ->{
+                viewModelScope.launch {
+                    dao.deleteProperty(events.property)
+                }
+            }
+            is Events.deleteTenant ->{
+                viewModelScope.launch {
+                    dao.deleteTenant(events.tenant)
+                }
             }
 
         }

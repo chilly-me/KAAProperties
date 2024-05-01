@@ -8,6 +8,7 @@ data class tenant(
     val fullName: String,
     val email: String,
     val phoneNumber: String,
+    val hasPaid: Boolean,
     val propertyId: Int,
     @PrimaryKey(autoGenerate = true)
     val tenantId: Int = 0,

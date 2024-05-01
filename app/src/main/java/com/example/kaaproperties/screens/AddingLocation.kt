@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -31,6 +32,7 @@ fun AddingLocation(
 ) {
     AlertDialog(
         onDismissRequest = {
+            onEvent(Events.NotAdding)
             navController.popBackStack()
             navController.navigate(route = "location_screen")
         },
@@ -60,19 +62,21 @@ fun AddingLocation(
                }
         },
         confirmButton = {
-            Row(modifier = Modifier.fillMaxWidth().padding(5.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(5.dp), verticalAlignment = Alignment.Bottom,) {
+                Button(onClick = {
+                    navController.popBackStack()
+                    onEvent(Events.NotAdding)
+                    navController.navigate(route = "location_screen")
+                }) {
+                    Text(text = "Dismiss")
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 Button(onClick = {
                     onEvent(Events.saveLocation)
                     val intent = Intent(context, MainActivity::class.java)
                     context.startActivity(intent)
                 }) {
                     Text("Save Location")
-                }
-                Button(onClick = {
-                    navController.popBackStack()
-                    navController.navigate(route = "location_screen")
-                }) {
-                    Text(text = "Dismisss")
                 }
             }
         }

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,6 +34,7 @@ fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavC
 
     AlertDialog(
         onDismissRequest = {
+            onEvent(Events.NotAdding)
             navController.popBackStack()
             navController.navigate(Screens.Property.withArgs(locationId))
         },
@@ -85,7 +87,16 @@ fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavC
             }
         },
         confirmButton = {
-            Row(modifier = Modifier.fillMaxWidth().padding(5.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(5.dp), verticalAlignment = Alignment.Bottom) {
+                Button(onClick = {
+                    onEvent(Events.NotAdding)
+                    navController.popBackStack()
+                    navController.navigate(Screens.Property.withArgs(locationId))
+
+                }) {
+                    Text(text = "Dismisss")
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 Button(onClick = {
                     onEvent(Events.saveProperty)
                     val intent = Intent(context, MainActivity::class.java)
@@ -93,13 +104,6 @@ fun AddingProperty(state: states, onEvent: (Events) -> Unit, navController: NavC
 
                 }) {
                     Text("Save Location")
-                }
-                Button(onClick = {
-                    navController.popBackStack()
-                    navController.navigate(Screens.Property.withArgs(locationId))
-
-                }) {
-                    Text(text = "Dismisss")
                 }
             }
         }

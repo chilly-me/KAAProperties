@@ -1,6 +1,6 @@
 package com.example.kaaproperties.screens
 
-import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,21 +32,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
-import com.example.kaaproperties.logic.ImagesList
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.states
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun scaffoldForLocations(navController: NavController, onEvents: (Events) -> Unit, states: states) {
+fun scaffoldForTenants(navController: NavController, onEvents: (Events) -> Unit, states: states, propertyId: String) {
     Scaffold(
         topBar = { Row(modifier = Modifier
             .fillMaxWidth()
@@ -84,58 +78,48 @@ fun scaffoldForLocations(navController: NavController, onEvents: (Events) -> Uni
                 )
 
             }
-                    },
+        },
         floatingActionButton = {
             IconButton(onClick = { onEvents(Events.Adding)}) {
-            Icon(painter = painterResource(id = R.drawable.ic_add), contentDescription = "Add Location")
+                Icon(painter = painterResource(id = R.drawable.ic_add), contentDescription = "Add Tenant")
             }
         },
 
-    ) {
+        ) {
         Column(modifier = Modifier.padding(it)) {
             if (states.isAdding){
-                navController.navigate(Screens.AddingLocations.route)
+                navController.navigate(Screens.AddingTenants.withArgs(propertyId))
             }
-            ListofLocations(onEvents = onEvents, states = states, navController = navController)
+            Tenants(onEvent = onEvents, state = states, navController = navController, propertyId = propertyId)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListofLocations(
-    modifier: Modifier = Modifier,
-    onEvents: (Events) -> Unit,
-    states: states,
-    navController: NavController
-) {
-    
+fun Tenants(state: states, onEvent: (Events) -> Unit, navController: NavController, propertyId: String) {
+
     LazyColumn {
-        items(states.locations){location ->
-            Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(40.dp)) {
-                var cardHeight = 100.dp
+        items(state.tenants){tenant ->
+            Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(40.dp)) {
                 Card(
-                    onClick = {
-                                onEvents(Events.selectLocation(location.locationId))
-                        val _locationId = location.locationId.toString()
-                        navController.navigate(Screens.Property.withArgs(_locationId))                              },
-                    modifier = modifier
+                    onClick = {/**/},
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .height(cardHeight),
+                        .height(100.dp),
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
-                    var expanded = remember {
+                    var expanded = remember{
                         mutableStateOf(false)
                     }
-                    Row(modifier = modifier
+                    Row(modifier = Modifier
                         .fillMaxSize()
                         .padding(5.dp)) {
-                        Box (modifier = modifier.weight(2f)){
-                            val images = ImagesList().imagesforlocation.random().imageId
+                        Box (modifier = Modifier.weight(2f)){
                             Image(
-                                painter = painterResource(images),
+                                painter = painterResource(id = R.drawable.profile),
                                 contentDescription = "Real Estate 1",
                                 Modifier
                                     .aspectRatio(2f)
@@ -143,19 +127,26 @@ fun ListofLocations(
                             )
 
                         }
-                        Box(modifier = modifier.weight(2f)) {
+                        Box(modifier = Modifier.weight(2f)) {
                             Column {
                                 Text(
-                                    text = location.locationName,
-                                    modifier = modifier
+                                    text = tenant.fullName,
+                                    modifier = Modifier
                                         .padding(12.dp),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold
 
                                 )
                                 Text(
-                                    text = location.description,
-                                    modifier = modifier
+                                    text = tenant.email,
+                                    modifier = Modifier
+                                        .padding(12.dp),
+                                    fontSize = 10.sp,
+
+                                    )
+                                Text(
+                                    text = tenant.phoneNumber,
+                                    modifier = Modifier
                                         .padding(12.dp),
                                     fontSize = 10.sp,
 
@@ -165,25 +156,16 @@ fun ListofLocations(
 
 
                         }
-                        Box(
-                            modifier = modifier.weight(1f),
-                            contentAlignment = Alignment.CenterEnd){
-                            Column {
-                                IconButton(onClick = { expanded.value = !expanded.value }) {
-                                    if (expanded.value){
-                                        Icon(painter = painterResource(id = R.drawable.ic_show_less), contentDescription = "Show Less")
-                                        cardHeight = 130.dp
-                                    }else{
-                                        Icon(painter = painterResource(id = R.drawable.ic_show_more), contentDescription = "Show More")
-                                        cardHeight = 100.dp
-                                    }
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 10.dp), contentAlignment = Alignment.CenterEnd){
+                            IconButton(onClick = { expanded.value = !expanded.value }) {
+                                if (expanded.value){
+                                    Icon(painter = painterResource(id = R.drawable.ic_show_less), contentDescription = "Show Less")
+                                }else{
+                                    Icon(painter = painterResource(id = R.drawable.ic_show_more), contentDescription = "Show More")
                                 }
-//                                IconButton(onClick = { onEvents(Events.) })
-//                                                            {
-//
-//                                }
                             }
-
                         }
 
 
@@ -193,6 +175,11 @@ fun ListofLocations(
                 }
 
             }
+        }
+    }
+    Box(contentAlignment = Alignment.BottomEnd) {
+        Button(onClick = {navController.navigate(Screens.AddingTenants.withArgs(propertyId))}) {
+            Text(text = "Add a Tenant")
         }
     }
 

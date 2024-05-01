@@ -1,9 +1,14 @@
 package com.example.kaaproperties.logic
 
+import com.example.kaaproperties.room.entities.location
+import com.example.kaaproperties.room.entities.property
+import com.example.kaaproperties.room.entities.tenant
+
 interface Events {
     data class selectLocation(val locationId: Int): Events
     object showLocations: Events
     object showProperies: Events
+    object showTenants: Events
     object saveLocation: Events
     object saveProperty: Events
     object saveTenant: Events
@@ -24,5 +29,10 @@ interface Events {
     data class setemail(val email: String): Events
     data class setphoneNumber(val phoneNumber: String): Events
     data class setpropertyId(val propertyId: Int): Events
+
+    data class deleteLocation(val location: location): Events
+    data class deleteProperty(val property: property): Events
+    data class deleteTenant(val tenant: tenant): Events
+
 
 }
