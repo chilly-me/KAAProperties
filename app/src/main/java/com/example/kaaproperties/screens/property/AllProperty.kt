@@ -1,7 +1,6 @@
-package com.example.kaaproperties.screens
+package com.example.kaaproperties.screens.property
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,12 +34,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.ImagesList
 import com.example.kaaproperties.logic.states
+import com.example.kaaproperties.screens.components.customCard
 
 @Composable
 fun scaffoldForAllProperties(navController: NavController, onEvents: (Events) -> Unit, states: states,context: Context) {
@@ -55,7 +54,7 @@ fun scaffoldForAllProperties(navController: NavController, onEvents: (Events) ->
                 fontSize = 20.sp
             )
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { navController.navigate(Screens.UserDetails.route) }) {
                 Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = "Profile")
             }
         }},
@@ -96,87 +95,15 @@ fun AllProperty(states: states, onEvents: (Events) -> Unit,navController: NavCon
     LazyColumn {
         items(states.property){property ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(40.dp)) {
-                Card(
-                    onClick = {
-                        onEvents(Events.selectProperty(property.propertyId))
-                        val _propertyId = property.propertyId.toString()
-
-                        navController.navigate(Screens.Tenants.withArgs(_propertyId))
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .height(100.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-                ) {
-                    var expanded = remember{
-                        mutableStateOf(false)
-                    }
-                    Row(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(5.dp)) {
-                        Box (modifier = Modifier.weight(2f)){
-                            val images = ImagesList().imagesforlocation.random().imageId
-                            Image(
-                                painter = painterResource(id = images),
-                                contentDescription = "Real Estate 1",
-                                Modifier
-                                    .aspectRatio(2f)
-//                            .size(40.dp)
-                            )
-
-                        }
-                        Box(modifier = Modifier.weight(2f)) {
-                            Column {
-                                Text(
-                                    text = property.propertyName,
-                                    modifier = Modifier
-                                        .padding(12.dp),
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold
-
-                                )
-                                Text(
-                                    text = property.propertyAddress + " " + property.propertyDescription,
-                                    modifier = Modifier
-                                        .padding(12.dp),
-                                    fontSize = 10.sp,
-
-                                    )
-                                Text(
-                                    text = property.capacity,
-                                    modifier = Modifier
-                                        .padding(12.dp),
-                                    fontSize = 10.sp,
-
-                                    )
-
-                            }
-
-
-                        }
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.CenterEnd){
-                            Column {
-                                IconButton(onClick = { expanded.value = !expanded.value }) {
-                                    if (expanded.value){
-                                        Icon(painter = painterResource(id = R.drawable.ic_show_less), contentDescription = "Show Less")
-                                    }else{
-                                        Icon(painter = painterResource(id = R.drawable.ic_show_more), contentDescription = "Show More")
-                                    }
-                                }
-
-                            }
-
-                        }
-
-
-
-                    }
-
-                }
+                val _propertyId = property.propertyId.toString()
+                customCard(
+                    onEvent = { onEvents(Events.selectProperty(property.propertyId)) },
+                    navigation = { navController.navigate(Screens.Tenants.withArgs(_propertyId)) },
+                    onDeleteEvent = { onEvents(Events.deleteProperty(property)) },
+                    text1 = property.propertyName,
+                    text2 = property.propertyDescription,
+                    text3 = property.propertyAddress,
+                    text4 = property.capacity,)
 
             }
         }

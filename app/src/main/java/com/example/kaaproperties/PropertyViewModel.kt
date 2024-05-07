@@ -1,28 +1,39 @@
 package com.example.kaaproperties
 
-import androidx.compose.runtime.getValue
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kaaproperties.flows.DBHelperImpl
+import com.example.kaaproperties.flows.DBhelper
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.room.entities.tenant
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
 
-    var firsTime by mutableStateOf(true)
-    var _firstTime = true
+    var property_loading = mutableStateOf(false)
+
+    fun isLoading(){
+        property_loading.value = true
+    }
+    fun isNotLoading(){
+        property_loading.value = false
+    }
+
     private val _state = MutableStateFlow(states())
     val state = _state
-
-    fun onEvent(events: Events){
+    fun onEvent(events: Events, dbHelper: DBhelper = DBHelperImpl(dao, state.value)){
         when(events){
             is Events.showLocations ->{
                 viewModelScope.launch {
@@ -63,10 +74,21 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
             }
             is Events.selectProperty ->{
                 viewModelScope.launch {
-                    val tenantsList = dao.getPropertyWithTenants(events.propertyId).flatMap { it.tenants }
-                    _state.update { it.copy(
-                        tenants = tenantsList
-                    ) }
+                    dbHelper.getTenants(events.propertyId)
+                        .flowOn(Dispatchers.IO)
+                        .catch {e->
+                            Log.d("ErrorOnFlow", "$e")
+                        }
+                        .collect{listofTenants ->
+                            _state.update { it.copy(
+                                tenants = listofTenants.flatMap { it.tenants }
+                            )
+                            }
+
+                        }
+
+
+
                 }
             }
             is Events.setLocationName ->{
@@ -176,8 +198,9 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
                 val email = _state.value.email
                 val phoneNumber = _state.value.phoneNumber
                 val propertyId = _state.value.propertyId
+                val hasPaid = _state.value.hasPaidRent
 
-                val tenant = tenant(fullName, email, phoneNumber, propertyId)
+                val tenant = tenant(fullName, email, phoneNumber, propertyId = propertyId, hasPaid =hasPaid)
 
                 viewModelScope.launch {
                     dao.insertTenant(tenant)
@@ -214,6 +237,19 @@ class PropertyViewModel(private val dao: PropertyDao): ViewModel() {
             is Events.deleteTenant ->{
                 viewModelScope.launch {
                     dao.deleteTenant(events.tenant)
+                }
+            }
+            is Events.confirmRent ->{
+                viewModelScope.launch{
+                    dao.updateTenant(tenantId = events.tenantId, hasPaid = events.hasPaid)
+                }
+            }
+            is Events.selectTenant ->{
+                viewModelScope.launch {
+                    val tenant_selected = dao.getTenant(events.tenantId)
+                    _state.update { it.copy(
+                        selectedtenant = tenant_selected
+                    ) }
                 }
             }
 

@@ -1,4 +1,4 @@
-package com.example.kaaproperties.screens
+package com.example.kaaproperties.screens.tenants
 
 import android.content.Context
 import androidx.compose.foundation.Image
@@ -48,11 +48,11 @@ fun scaffoldForAllTenants(navController: NavController, onEvents: (Events) -> Un
             .height(60.dp)
             .padding(10.dp)) {
             Text(
-                text = "All Properties",
+                text = "All Tenants ",
                 fontSize = 20.sp
             )
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { navController.navigate(Screens.UserDetails.route) }) {
                 Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = "Profile")
             }
         }},
@@ -132,15 +132,15 @@ fun AllTenants(navController: NavController, state: states, onEvents: (Events) -
                                 Text(
                                     text = tenant.email,
                                     modifier = Modifier
-                                        .padding(12.dp),
-                                    fontSize = 10.sp,
+                                        .padding(5.dp),
+                                    fontSize = 8.sp,
 
                                     )
                                 Text(
                                     text = tenant.phoneNumber,
                                     modifier = Modifier
-                                        .padding(12.dp),
-                                    fontSize = 10.sp,
+                                        .padding(5.dp),
+                                    fontSize = 8.sp,
 
                                     )
 

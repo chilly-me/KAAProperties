@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.room.entities.tenant
@@ -15,6 +16,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PropertyDao {
+
+    @Query("UPDATE tenant SET hasPaid = :hasPaid WHERE tenantId = :tenantId")
+    suspend fun updateTenant(tenantId: Int, hasPaid:Boolean)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocation(location: location)
@@ -51,6 +55,9 @@ interface PropertyDao {
     @Query("SELECT * FROM tenant")
     suspend fun getAllTenants(): List<tenant>
 
+
+    @Query("SELECT * FROM tenant WHERE tenantId = :tenantId")
+    suspend fun getTenant(tenantId: Int): tenant
 
     @Transaction
     @Query("SELECT * FROM location WHERE locationId = :locationId")

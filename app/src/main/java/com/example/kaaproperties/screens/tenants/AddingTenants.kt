@@ -1,8 +1,7 @@
-package com.example.kaaproperties.screens
+package com.example.kaaproperties.screens.tenants
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,8 +70,9 @@ fun AddingTenants(state: states, onEvent: (Events) -> Unit, propertyId: String, 
             Row(modifier = Modifier.fillMaxWidth().padding(5.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(40.dp)) {
                 Button(onClick = {
                     onEvent(Events.saveTenant)
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
+                    navController.popBackStack()
+                    navController.navigate(Screens.Tenants.withArgs(propertyId))
+                    onEvent(Events.NotAdding)
                 }) {
                     Text("Save Tenant")
                 }

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
@@ -15,7 +17,7 @@ import com.example.kaaproperties.room.entities.tenant
         property::class,
         tenant::class,
     ],
-    version = 1
+    version = 2
 )
 abstract class PropertyDatabase: RoomDatabase() {
     abstract val propertyDao: PropertyDao
@@ -23,14 +25,21 @@ abstract class PropertyDatabase: RoomDatabase() {
     companion object{
         @Volatile
         private var INSTANCE: PropertyDatabase ?= null
-
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add the new column 'hasPaid' to the 'tenant' table
+                db.execSQL("ALTER TABLE tenant ADD COLUMN hasPaid INTEGER NOT NULL DEFAULT 0")
+            }
+        }
         fun getInstance(context: Context): PropertyDatabase{
             synchronized(this){
                 return INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     PropertyDatabase::class.java,
                     "Property_db"
-                ).build().also {
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build().also {
                     INSTANCE = it
                 }
             }

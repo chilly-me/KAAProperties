@@ -12,10 +12,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.kaaproperties.Navigation.Navigation
+import com.example.kaaproperties.flows.DBHelperImpl
+import com.example.kaaproperties.flows.DBhelper
 import com.example.kaaproperties.logic.Events
+import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.room.database.PropertyDatabase
 import com.example.kaaproperties.ui.theme.KAAPropertiesTheme
 
@@ -24,6 +28,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContent {
             val dao = PropertyDatabase.getInstance(applicationContext).propertyDao
             val viewModel by viewModels<PropertyViewModel>(
@@ -36,18 +41,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             )
+            val state by viewModel.state.collectAsState()
+            val dbHelper = DBHelperImpl(dao, state)
             val x = viewModel::onEvent
-            x((Events.showLocations))
+            x((Events.showLocations), dbHelper)
             KAAPropertiesTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val state by viewModel.state.collectAsState()
 //                    AddingLocation(states = state, onEvent = viewModel::onEvent)
 
-                    Navigation(states = state, onEvents = viewModel::onEvent, context = LocalContext.current)
+                    Navigation(states = state, onEvents = viewModel::onEvent , context = LocalContext.current)
 
 
                 }

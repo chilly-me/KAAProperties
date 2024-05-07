@@ -7,30 +7,32 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.kaaproperties.Authentication.RegisterUser
-import com.example.kaaproperties.Authentication.loginUser
+import com.example.kaaproperties.Authentication.email.RegisterUser
+import com.example.kaaproperties.Authentication.email.loginUser
+import com.example.kaaproperties.AuthenticationViewModel
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.states
-import com.example.kaaproperties.screens.AddingLocation
-import com.example.kaaproperties.screens.AddingProperty
-import com.example.kaaproperties.screens.AddingTenants
-import com.example.kaaproperties.screens.AllProperty
-import com.example.kaaproperties.screens.UserProfileScreen
-import com.example.kaaproperties.screens.scaffoldForAllProperties
-import com.example.kaaproperties.screens.scaffoldForLocations
-import com.example.kaaproperties.screens.scaffoldForProperties
-import com.example.kaaproperties.screens.scaffoldForTenants
+import com.example.kaaproperties.screens.location.AddingLocation
+import com.example.kaaproperties.screens.property.AddingProperty
+import com.example.kaaproperties.screens.tenants.AddingTenants
+import com.example.kaaproperties.screens.tenants.PayingRent
+import com.example.kaaproperties.screens.user.ScaffoldforUserProfile
+import com.example.kaaproperties.screens.property.scaffoldForAllProperties
+import com.example.kaaproperties.screens.tenants.scaffoldForAllTenants
+import com.example.kaaproperties.screens.location.scaffoldForLocations
+import com.example.kaaproperties.screens.property.scaffoldForProperties
+import com.example.kaaproperties.screens.tenants.scaffoldForTenants
 
 @Composable
 fun Navigation(
     onEvents: (Events) -> Unit,
     states: states,
-    context: Context
+    context: Context,
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screens.Locations.route) {
         composable(route = Screens.UserDetails.route) {
-            UserProfileScreen(navController = navController)
+            ScaffoldforUserProfile(navController = navController)
         }
         composable(route = Screens.Locations.route) {
             scaffoldForLocations(states = states, onEvents = onEvents, navController = navController)
@@ -71,7 +73,7 @@ fun Navigation(
                 }
             )
         ){
-            it.arguments?.getString("propertyId")?.let { it1 -> scaffoldForTenants(states = states, onEvents = onEvents, navController = navController, propertyId = it1) }
+            it.arguments?.getString("propertyId")?.let { it1 -> scaffoldForTenants(states = states, onEvents = onEvents, navController = navController, propertyId = it1, context = context) }
         }
         composable(
             route = Screens.AddingTenants.route + "/{propertyId}",
@@ -85,8 +87,14 @@ fun Navigation(
             it.arguments?.getString("propertyId")
                 ?.let { it1 -> AddingTenants(state = states, onEvent = onEvents, propertyId = it1, navController = navController, context = context) }
         }
+        composable(route = Screens.TenantsStatus.route){
+            PayingRent(onEvents = onEvents, context = context, navController = navController, states = states)
+        }
         composable(route = Screens.AllProperty.route){
             scaffoldForAllProperties(states = states, onEvents = onEvents, navController = navController, context = context)
+        }
+        composable(route = Screens.AllTenants.route){
+            scaffoldForAllTenants(states = states, onEvents = onEvents, navController = navController, context = context)
         }
 
     }
@@ -94,14 +102,14 @@ fun Navigation(
 }
 
 @Composable
-fun NavigationForAuthentication(context: Context) {
+fun NavigationForAuthentication(context: Context, viewModel: AuthenticationViewModel)  {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screens.LoginScreen.route){
         composable(route = Screens.SignUp.route) {
-            RegisterUser(navController = navController)
+            RegisterUser(navController = navController,  context = context, viewModel = viewModel)
         }
         composable(route = Screens.LoginScreen.route) {
-            loginUser(navController = navController, context = context)
+            loginUser(navController = navController, context = context, viewModel = viewModel)
         }
     }
 

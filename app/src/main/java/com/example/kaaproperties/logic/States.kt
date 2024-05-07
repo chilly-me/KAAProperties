@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 data class states(
     val locations: List<location> = emptyList(),
+    val selectedtenant: tenant = tenant("","","",false,0),
     val property: List<property> = emptyList(),
     val tenants: List<tenant> = emptyList(),
     val locationName: String = "",
@@ -20,5 +21,6 @@ data class states(
     val email: String = "",
     val phoneNumber: String = "",
     val propertyId: Int = 0,
-    val isAdding: Boolean = false
+    val isAdding: Boolean = false,
+    val hasPaidRent: Boolean = false
 )

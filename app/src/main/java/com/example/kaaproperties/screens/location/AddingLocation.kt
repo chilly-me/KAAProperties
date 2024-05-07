@@ -1,4 +1,4 @@
-package com.example.kaaproperties.screens
+package com.example.kaaproperties.screens.location
 
 import android.content.Context
 import android.content.Intent

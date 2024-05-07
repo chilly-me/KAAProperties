@@ -18,8 +18,8 @@
         <activity
             android:name=".AuthenticationActivity"
             android:exported="true"
-            android:label="@string/title_activity_authentication"
-            android:theme="@style/Theme.KAAProperties" >
+            android:label="@string/app_name"
+            android:theme="@style/Theme.app.Splash" >
 
         </activity>
         <activity
@@ -31,7 +31,14 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
 
 </manifest>

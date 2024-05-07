@@ -33,6 +33,11 @@ interface Events {
     data class deleteLocation(val location: location): Events
     data class deleteProperty(val property: property): Events
     data class deleteTenant(val tenant: tenant): Events
+    data class confirmRent(val hasPaid: Boolean, val tenantId: Int): Events
+
+    data class selectTenant(val tenantId: Int): Events
+
+
 
 
 }
