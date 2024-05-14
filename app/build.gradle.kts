@@ -129,4 +129,20 @@ dependencies {
     //Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:2.2.0")
+
+    implementation("com.github.skydoves:landscapist-glide:1.3.7")
+
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
+    // To use constraintlayout in compose
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha13")
+
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
+
 }

@@ -25,10 +25,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,64 +40,54 @@ import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.states
+import com.example.kaaproperties.screens.components.customScaffold
+import com.example.kaaproperties.screens.components.customSearchBox
+import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 
 @Composable
-fun scaffoldForAllTenants(navController: NavController, onEvents: (Events) -> Unit, states: states, context: Context) {
-    onEvents(Events.showTenants)
-    Scaffold(
-        topBar = { Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .padding(10.dp)) {
-            Text(
-                text = "All Tenants ",
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { navController.navigate(Screens.UserDetails.route) }) {
-                Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = "Profile")
-            }
-        }},
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate(Screens.Locations.route) },
-                    icon = { Icon(painter = painterResource(id = R.drawable.baseline_location_on_24), contentDescription = "Home") },
-                    label = { Text(text = "Locations") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate(Screens.AllProperty.route) },
-                    icon = { Icon(painter = painterResource(id = R.drawable.baseline_location_city_24), contentDescription = "Property") },
-                    label = { Text(text = "All Properties") }
-                )
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { navController.navigate(Screens.AllTenants.route) },
-                    icon = { Icon(painter = painterResource(id = R.drawable.ic_groups), contentDescription = "Tenants") },
-                    label = { Text(text = "All Tenants") }
-                )
+fun scaffoldForAllTenants(
+    navController: NavController,
+    onEvents: (Events) -> Unit,
+    states: states,
+    context: Context,
+) {
+    customScaffold(
+        navController = navController,
+        onEvents = onEvents,
+        states = states,
+        ifAdding = {  },
+        titleText = "All Tenants",
+        titleIcon = R.drawable.ic_groups,
+        floatingActionButtonId = null,
+        tenantsSelected = true,
+        screen = {
+            Column(modifier = Modifier) {
 
+                customSearchBox(onValueChange = { onEvents(Events.searchTenant(it)) })
+                AllTenants(navController, states, onEvents)
             }
         }
-    ) {
-        Column(modifier = Modifier.padding(it)) {
-            AllTenants(navController, states, onEvents)
-        }
-    }
+    )
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllTenants(navController: NavController, state: states, onEvents: (Events) -> Unit) {
-    onEvents(Events.showTenants)
+    if (state.tenants.isEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "There are no tenants with that name ", color = Color.Black, fontFamily = AlegreyoSansFontFamily, fontWeight = FontWeight(1000))
+        }
+    }
     LazyColumn {
-        items(state.tenants){tenant ->
+        items(state.tenants) { tenant ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(40.dp)) {
                 Card(
-                    onClick = {/**/},
+                    onClick = {/**/ },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -103,13 +95,15 @@ fun AllTenants(navController: NavController, state: states, onEvents: (Events) -
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
-                    var expanded = remember{
+                    var expanded = remember {
                         mutableStateOf(false)
                     }
-                    Row(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(5.dp)) {
-                        Box (modifier = Modifier.weight(2f)){
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(5.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(2f)) {
                             Image(
                                 painter = painterResource(id = R.drawable.profile),
                                 contentDescription = "Real Estate 1",
@@ -148,18 +142,25 @@ fun AllTenants(navController: NavController, state: states, onEvents: (Events) -
 
 
                         }
-                        Box(modifier = Modifier
-                            .weight(1f)
-                            .padding(top = 10.dp), contentAlignment = Alignment.CenterEnd){
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(top = 10.dp), contentAlignment = Alignment.CenterEnd
+                        ) {
                             IconButton(onClick = { expanded.value = !expanded.value }) {
-                                if (expanded.value){
-                                    Icon(painter = painterResource(id = R.drawable.ic_show_less), contentDescription = "Show Less")
-                                }else{
-                                    Icon(painter = painterResource(id = R.drawable.ic_show_more), contentDescription = "Show More")
+                                if (expanded.value) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_show_less),
+                                        contentDescription = "Show Less"
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_show_more),
+                                        contentDescription = "Show More"
+                                    )
                                 }
                             }
                         }
-
 
 
                     }
@@ -171,3 +172,4 @@ fun AllTenants(navController: NavController, state: states, onEvents: (Events) -
     }
 
 }
+

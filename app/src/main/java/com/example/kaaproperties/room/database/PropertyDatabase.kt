@@ -17,7 +17,7 @@ import com.example.kaaproperties.room.entities.tenant
         property::class,
         tenant::class,
     ],
-    version = 2
+    version = 3
 )
 abstract class PropertyDatabase: RoomDatabase() {
     abstract val propertyDao: PropertyDao
@@ -31,6 +31,11 @@ abstract class PropertyDatabase: RoomDatabase() {
                 db.execSQL("ALTER TABLE tenant ADD COLUMN hasPaid INTEGER NOT NULL DEFAULT 0")
             }
         }
+        val MIGRATION_2_3 = object : Migration(2,3){
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tenant ADD COLUMN uri TEXT")
+            }
+        }
         fun getInstance(context: Context): PropertyDatabase{
             synchronized(this){
                 return INSTANCE ?: Room.databaseBuilder(
@@ -39,6 +44,7 @@ abstract class PropertyDatabase: RoomDatabase() {
                     "Property_db"
                 )
                     .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_2_3)
                     .build().also {
                     INSTANCE = it
                 }

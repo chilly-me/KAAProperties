@@ -5,24 +5,27 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,15 +33,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.kaaproperties.AuthenticationViewModel
+import com.example.kaaproperties.PropertyViewModel
 import com.example.kaaproperties.MainActivity
+import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
+import com.example.kaaproperties.screens.components.customButton
+import com.example.kaaproperties.screens.components.customPasswordTextField
+import com.example.kaaproperties.screens.components.customTextField
+import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.regex.Pattern
@@ -50,7 +61,7 @@ private lateinit var firebaseFirestore: FirebaseFirestore
 var isLoading: Boolean = false
 @Composable
 fun LoginLayout(
-    onLogin: (email: String, password: String) -> Unit, navController: NavController, viewModel: AuthenticationViewModel
+    onLogin: (email: String, password: String) -> Unit, navController: NavController, viewModel: PropertyViewModel
 ) {
     var showPassword by remember {
         mutableStateOf(false)
@@ -66,98 +77,126 @@ fun LoginLayout(
         mutableStateOf("")
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "Login To Your Account",
-            fontSize = 20.sp
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.apartment14),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .height(190.dp)
+                    .align(Alignment.BottomCenter),
+                contentScale = ContentScale.FillBounds
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(top = 54.dp)
+                        .height(150.dp)
+                        .align(Alignment.Start)
+                        .offset(x = (-20).dp)
+                        .border(width = 0.dp, color = Color.Transparent),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
 
-        Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Sign In",
+                    style = TextStyle(
+                        fontSize = 28.sp,
+                        fontFamily = AlegreyoSansFontFamily,
+                        color = Color(0xB2FFFFFF),
+                        fontWeight = FontWeight(500)
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 24.dp)
+                )
+                Text(
+                    text = "Sign In now to access our Services",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontFamily = AlegreyoSansFontFamily,
+                        color = Color(0xB2FFFFFF)
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 24.dp)
+                )
+                customTextField(
+                    value = email,
+                    placeHolder = "Email Address",
+                    onValueChange = {
+                        email = it
+                    },
+                    viewModel = viewModel
+                )
+                customPasswordTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        isPasswordError = isPasswordValid(it)
+                    },
+                    viewModel = viewModel
+                )
+                AnimatedVisibility(visible = viewModel.loading.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(20.dp)
 
-        TextField(
-            value = email,
-            leadingIcon = { Icon(painter = painterResource(id = R.drawable.ic_email), contentDescription = "Email")},
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            enabled = !viewModel.loading.value
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        TextField(
-            value = password,
-            onValueChange = {
-                password = it
-                isPasswordError = isPasswordValid(it)
-            },
-            leadingIcon = { Icon(painter = painterResource(id = R.drawable.ic_password), contentDescription = "Password")},
-            visualTransformation = if(showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-//            PassWordVisibilityToggleIcon(showPassword = showPassword, onTogglePasswordVisibility = { showPassword = !showPassword})
-            trailingIcon = {
-                val image = if(!showPassword){
-                    Icons.Filled.VisibilityOff
-                } else {
-                    Icons.Filled.Visibility
+                    )
+
                 }
-                val contentDescription = if (showPassword){
-                    "Hide password icon"
-                } else{
-                    "Show password icon"
-                }
-                IconButton(onClick = { showPassword = !showPassword }){
-                    Icon(imageVector = image, contentDescription = contentDescription)
-                }
-            },
-            isError = !isPasswordError,
-            supportingText = {
-                if (isPasswordError) {
+//                Spacer(modifier = Modifier.height(20.dp))
+                customButton(
+                    onClick = { onLogin(email, password) },
+                    buttonText = "Login",
+                    color = 0xDA309FFF,
+                    iconId = null,
+                    enabled = !viewModel.loading.value
+                )
+
+                Row(modifier = Modifier.padding(top = 12.dp, bottom = 52.dp))
+                {
                     Text(
-                        text = "Check your password",
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.error
+                        text = "Don't have an account?",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = AlegreyoSansFontFamily,
+                            color = Color.White
+
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Sign Up",
+                        modifier = if (!viewModel.loading.value) {
+                            Modifier
+                                .clickable {
+                                    navController.navigate(Screens.SignUp.route)
+                                }
+                        } else {
+                            Modifier
+                        },
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = AlegreyoSansFontFamily,
+                            fontWeight = FontWeight(800),
+                            color = Color.White
+                        )
                     )
                 }
-            },
-            label = { Text("Password") },
-            enabled = !viewModel.loading.value
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-
-        AnimatedVisibility(visible = viewModel.loading.value) {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(20.dp)
-            )
-
-        }
-
-        Button(
-            onClick = {
-            onLogin(email, password)
-        },
-            enabled = !viewModel.loading.value
-        ) {
-            Text(text = "Login")
-        }
-
-
-        Text(
-            text = "Don't have an account create one here",
-            if (!viewModel.loading.value){
-                Modifier
-                    .clickable { navController.navigate(route = "sign_up_screen")
-                }
-            }else{
-                 Modifier
             }
-            ,
-
-            )
-
+        }
     }
 }
 
@@ -191,7 +230,7 @@ fun isPasswordValid(it: String): Boolean {
 
 @Composable
 fun loginUser(
-    modifier: Modifier = Modifier.fillMaxSize(), navController: NavController, context: Context, viewModel: AuthenticationViewModel
+    modifier: Modifier = Modifier.fillMaxSize(), navController: NavController, context: Context, viewModel: PropertyViewModel
 ) {
 
     LoginLayout(
@@ -209,7 +248,7 @@ fun loginUser(
 }
 
 
-fun LoginUser(email: String, password: String, context: Context, navController: NavController, viewModel: AuthenticationViewModel) {
+fun LoginUser(email: String, password: String, context: Context, navController: NavController, viewModel: PropertyViewModel) {
     auth = FirebaseAuth.getInstance()
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { authenticatingTask ->
         isLoading = false
@@ -218,8 +257,9 @@ fun LoginUser(email: String, password: String, context: Context, navController: 
             Toast.makeText(
                 context, "You have logged into your account successfully", Toast.LENGTH_SHORT
             ).show()
-            val intent = Intent(context, MainActivity::class.java)
-            context.startActivity(intent)
+            navController.navigate(Screens.Locations.route){
+                navController.popBackStack()
+            }
         } else {
             Toast.makeText(context, authenticatingTask.exception?.message, Toast.LENGTH_SHORT)
                 .show()

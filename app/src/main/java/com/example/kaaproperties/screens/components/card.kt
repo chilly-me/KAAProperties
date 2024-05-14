@@ -1,5 +1,6 @@
 package com.example.kaaproperties.screens.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +18,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.ImagesList
+import com.example.kaaproperties.logic.ListOfImages
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +50,9 @@ fun customCard(
     text2: String = "",
     text3: String = "",
     text4: String = "",
-    type: String = "",
+    id: String,
+    collectionPath: String,
+    errorId: Int
 ) {
     Card(
         onClick = {
@@ -49,69 +62,92 @@ fun customCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .height(100.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+            .clip(RectangleShape)
+            .height(200.dp),
+        shape = RectangleShape,
+        border = BorderStroke(0.1.dp, Color.Black),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
-        var expanded = remember{
-            mutableStateOf(false)
-        }
-        Row(modifier = Modifier
-            .fillMaxSize()
-            .padding(5.dp)) {
-            Box (modifier = Modifier.weight(2f)){
-                val images = ImagesList().imagesforproperty.random().imageId
-                Image(
-                    painter = painterResource(id = images),
-                    contentDescription = "Real Estate 1",
-                    Modifier
-                        .aspectRatio(2f)
-//                            .size(40.dp)
+
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(4f)
+                    .padding(vertical = 15.dp, horizontal = 15.dp)
+            ) {
+                val images = retrieveImagesFromFireStore(id = id, collectionPath = collectionPath)
+                val imageShown = if (images.listOfImages.isEmpty()){""}else{ images.listOfImages[0]}
+                AsyncImage(
+                    model = imageShown,
+                    contentDescription = null,
+                    placeholder = painterResource(id = R.drawable.loading),
+                    error = painterResource(id = errorId)
                 )
 
             }
-            Box(modifier = Modifier.weight(2f)) {
-                Column {
+            Box(
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxSize()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     Text(
                         text = text1,
                         modifier = Modifier
-                            .padding(12.dp),
-                        fontSize = 15.sp,
+                            .padding(5.dp),
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
 
                     )
                     Text(
-                        text = text2 + " " + text3,
+                        text = text2,
                         modifier = Modifier
-                            .padding(12.dp),
+                            .padding(2.dp),
+                        fontSize = 10.sp,
+
+                        )
+
+                    Text(
+                        text = text3,
+                        modifier = Modifier
+                            .padding(2.dp),
                         fontSize = 10.sp,
 
                         )
                     Text(
                         text = text4,
                         modifier = Modifier
-                            .padding(12.dp),
+                            .padding(2.dp),
                         fontSize = 10.sp,
 
                         )
+
 
                 }
 
 
             }
             Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd){
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(end = 10.dp, bottom = 5.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
                 Column {
-                    IconButton(onClick = { expanded.value = !expanded.value }) {
-                        if (expanded.value){
-                            Icon(painter = painterResource(id = R.drawable.ic_show_less), contentDescription = "Show Less")
-                        }else{
-                            Icon(painter = painterResource(id = R.drawable.ic_show_more), contentDescription = "Show More")
-                        }
-                    }
-                    IconButton(onClick = { onDeleteEvent() }) {
-                        Icon(painter = painterResource(id = R.drawable.baseline_delete_24), contentDescription = "Delete $type")
+
+                    IconButton(onClick = { onDeleteEvent()}) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_delete_24),
+                            contentDescription = "Delete "
+                        )
                     }
 
                 }
@@ -119,8 +155,37 @@ fun customCard(
             }
 
 
-
         }
-
     }
 }
+
+
+
+@Composable
+fun retrieveImagesFromFireStore(id: String, collectionPath: String): ListOfImages {
+
+    val db = FirebaseFirestore.getInstance()
+    var ListOfImages by remember {
+        mutableStateOf(ListOfImages())
+    }
+
+
+    if (!id.isEmpty()){
+        val imageRef = db.collection(collectionPath).document(id)
+        imageRef.get()
+            .addOnSuccessListener {
+                val listOfImages = it.toObject<ListOfImages>()
+                if (listOfImages != null) {
+                    ListOfImages = listOfImages
+                }
+            }
+    }
+    return ListOfImages
+
+}
+
+
+
+
+
+

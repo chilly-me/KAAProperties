@@ -5,11 +5,12 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class tenant(
-    val fullName: String,
-    val email: String,
     val phoneNumber: String,
-    val hasPaid: Boolean,
-    val propertyId: Int,
     @PrimaryKey(autoGenerate = true)
     val tenantId: Int = 0,
+    val fullName: String,
+    val propertyId: Int,
+    val uri: String?,
+    val email: String,
+    val hasPaid: Boolean,
 )

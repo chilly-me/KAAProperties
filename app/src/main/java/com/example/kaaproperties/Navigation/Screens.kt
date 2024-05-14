@@ -1,6 +1,8 @@
 package com.example.kaaproperties.Navigation
 
 sealed class Screens(val route: String) {
+
+    data object WelcomeScreen: Screens("welcome_screen")
     data object LoginScreen: Screens("login_screen")
     data object SignUp: Screens("sign_up_screen")
     data object UserDetails: Screens("user_details_screen")

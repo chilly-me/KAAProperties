@@ -16,12 +16,12 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.kaaproperties.Navigation.Navigation
-import com.example.kaaproperties.flows.DBHelperImpl
-import com.example.kaaproperties.flows.DBhelper
 import com.example.kaaproperties.logic.Events
-import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.room.database.PropertyDatabase
 import com.example.kaaproperties.ui.theme.KAAPropertiesTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 class MainActivity : ComponentActivity() {
 
@@ -30,21 +30,32 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
+            var firebaseFirestore = FirebaseFirestore.getInstance()
+            var auth = FirebaseAuth.getInstance()
+            var storageRef = FirebaseStorage.getInstance().reference.child("ImagesForProperties")
+            val context = LocalContext.current
             val dao = PropertyDatabase.getInstance(applicationContext).propertyDao
             val viewModel by viewModels<PropertyViewModel>(
                 factoryProducer = {
                     object : ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             @Suppress("UNCHECKED_CAST")
-                            return PropertyViewModel(dao) as T
+                            return PropertyViewModel(
+                                dao = dao,
+                                firebaseFirestore = firebaseFirestore,
+                                auth = auth,
+                                storageRef = storageRef,
+                                context = context
+                            ) as T
                         }
                     }
                 }
             )
             val state by viewModel.state.collectAsState()
-            val dbHelper = DBHelperImpl(dao, state)
             val x = viewModel::onEvent
-            x((Events.showLocations), dbHelper)
+            x((Events.showLocations))
+            x((Events.showTenants))
+            x((Events.showProperies))
             KAAPropertiesTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -53,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 ) {
 //                    AddingLocation(states = state, onEvent = viewModel::onEvent)
 
-                    Navigation(states = state, onEvents = viewModel::onEvent , context = LocalContext.current)
+                    Navigation(states = state, onEvents = viewModel::onEvent , context = LocalContext.current, viewModel = viewModel)
 
 
                 }

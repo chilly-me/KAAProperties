@@ -21,7 +21,7 @@ interface PropertyDao {
     suspend fun updateTenant(tenantId: Int, hasPaid:Boolean)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLocation(location: location)
+    suspend fun insertLocation(location: location): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProperty(property: property)
@@ -47,13 +47,29 @@ interface PropertyDao {
     suspend fun deleteTenant(tenant: tenant)
 
     @Query("SELECT * FROM location")
-    suspend fun getAllLocations(): List<location>
+    fun getAllLocations(): Flow<List<location>>
 
     @Query("SELECT * FROM property")
-    suspend fun getAllProperties(): List<property>
+    fun getAllProperties(): Flow<List<property>>
 
     @Query("SELECT * FROM tenant")
-    suspend fun getAllTenants(): List<tenant>
+    fun getAllTenants(): Flow<List<tenant>>
+
+    @Query("SELECT * FROM tenant WHERE fullName LIKE :name|| '%' ")
+    fun searchForTenants(name: String): Flow<List<tenant>>
+
+    @Query("SELECT * FROM location WHERE locationName LIKE :name|| '%' ")
+    fun searchForLocations(name: String): Flow<List<location>>
+
+    @Query("SELECT * FROM property WHERE propertyDescription = :description AND locationId = :locationId")
+    fun filterPropertiesUsingDescription(description: String, locationId: Int): Flow<List<property>>
+
+    @Query("SELECT * FROM property WHERE capacity = :capacity AND locationId = :locationId")
+    fun filterPropertiesUsingCapcity(capacity: String, locationId: Int): Flow<List<property>>
+
+    @Query("SELECT * FROM property WHERE propertyName LIKE :text|| '%'")
+    fun searchForProperties(text: String): Flow<List<property>>
+
 
 
     @Query("SELECT * FROM tenant WHERE tenantId = :tenantId")
@@ -61,9 +77,9 @@ interface PropertyDao {
 
     @Transaction
     @Query("SELECT * FROM location WHERE locationId = :locationId")
-    suspend fun getLocationWithProperties(locationId: Int): List<locationWithProperties>
+    fun getLocationWithProperties(locationId: Int): Flow<List<locationWithProperties>>
 
     @Transaction
     @Query("SELECT * FROM property WHERE propertyId = :propertyId")
-    suspend fun getPropertyWithTenants(propertyId: Int): List<propertyWithTenants>
+    fun getPropertyWithTenants(propertyId: Int): Flow<List<propertyWithTenants>>
 }
