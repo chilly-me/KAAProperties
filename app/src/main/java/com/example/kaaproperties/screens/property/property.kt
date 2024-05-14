@@ -44,7 +44,6 @@ import androidx.navigation.NavController
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
-import com.example.kaaproperties.logic.ImagesList
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customCard
 import com.example.kaaproperties.screens.components.customScaffold
@@ -67,7 +66,7 @@ fun scaffoldForProperties(
             navController.navigate(Screens.AddingProperty.withArgs(locationId))
 
         },
-        titleText = "Properties for ${states.locationName}",
+        titleText = "Properties in ${states.locationName}",
         titleIcon = R.drawable.baseline_location_city_24,
         screen = {
             Column(modifier = Modifier) {
@@ -145,7 +144,6 @@ fun propertyScreen(
             val _propertyId = property.propertyId.toString()
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(40.dp)) {
 
-
                 customCard(
                     onEvent = {
                         onEvents(
@@ -161,8 +159,7 @@ fun propertyScreen(
                     text2 = property.propertyDescription,
                     text3 = property.propertyAddress,
                     text4 = property.capacity,
-                    id = property.propertyId.toString(),
-                    collectionPath = "Property",
+                    imageList = property.propertyImages,
                     errorId = R.drawable.property2
                 )
 

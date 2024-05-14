@@ -10,7 +10,7 @@ data class tenant(
     val tenantId: Int = 0,
     val fullName: String,
     val propertyId: Int,
-    val uri: String?,
+    val Imageuri: String?,
     val email: String,
     val hasPaid: Boolean,
 )

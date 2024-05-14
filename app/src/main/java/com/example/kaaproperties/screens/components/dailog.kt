@@ -1,9 +1,14 @@
 package com.example.kaaproperties.screens.components
 
 import android.annotation.SuppressLint
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,11 +34,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
+import coil.compose.rememberAsyncImagePainter
 import com.example.kaaproperties.R
 import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 
@@ -43,9 +49,10 @@ fun customDailog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     headerText: String,
-    image: @Composable () -> Unit,
     content: @Composable () -> Unit,
     saveButton: @Composable () -> Unit,
+    imageUriList: (List<Uri>) -> Unit,
+    image: @Composable (() -> Unit)? = null
 ) {
     Dialog(onDismissRequest = { onDismiss() }) {
         Column(
@@ -109,7 +116,49 @@ fun customDailog(
             }
             Text(text = headerText, fontSize = 20.sp, fontFamily = AlegreyoSansFontFamily)
             Spacer(modifier = Modifier.height(20.dp))
-            image()
+            if (image == null){
+                var ImageUriList by remember {
+                    mutableStateOf<List<Uri?>>(emptyList())
+                }
+                val launcher =
+                    rememberLauncherForActivityResult(contract = ActivityResultContracts.GetMultipleContents()) { uriList ->
+                        ImageUriList = uriList
+                        imageUriList(uriList)
+                    }
+                if (!ImageUriList.isEmpty()) {
+                    Row {
+                        repeat(ImageUriList.size) { index ->
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageUriList[index]
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        launcher.launch("image/*")
+                                    }
+                                    .size(36.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.apartment10),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clickable {
+                                launcher.launch("image/*")
+                            }
+                            .clip(RectangleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }else{
+                image()
+            }
 
 
             Spacer(modifier = Modifier.height(20.dp))

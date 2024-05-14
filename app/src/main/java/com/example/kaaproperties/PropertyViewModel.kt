@@ -1,42 +1,31 @@
 package com.example.kaaproperties
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaaproperties.logic.Events
-import com.example.kaaproperties.logic.locationsData
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.room.entities.tenant
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import okhttp3.internal.notify
-import okhttp3.internal.wait
+import kotlinx.coroutines.runBlocking
 
 class PropertyViewModel(
     private val dao: PropertyDao,
@@ -48,10 +37,11 @@ class PropertyViewModel(
 
     var loading = mutableStateOf(false)
 
-    fun isLoading(){
+    fun isLoading() {
         loading.value = true
     }
-    fun isNotLoading(){
+
+    fun isNotLoading() {
         loading.value = false
     }
 
@@ -60,7 +50,7 @@ class PropertyViewModel(
     val state = _state
 
 
-
+    @SuppressLint("MutableCollectionMutableState")
     fun onEvent(events: Events) {
 
         when (events) {
@@ -240,14 +230,6 @@ class PropertyViewModel(
                 }
             }
 
-            is Events.setUri -> {
-                _state.update {
-                    it.copy(
-                        uri = events.uri
-                    )
-                }
-            }
-
             is Events.setpropertyId -> {
                 _state.update {
                     it.copy(
@@ -257,170 +239,229 @@ class PropertyViewModel(
             }
 
             is Events.saveLocation -> {
-                val locationName = _state.value.locationName
-                val locationDescription = _state.value.locationDescription
-                if (locationName.isBlank() || locationDescription.isBlank()) {
-                    return
-                }
-                val location = location(
-                    locationName = locationName,
-                    description = locationDescription
-                )
+                val Uri = events.imagesUri
+                var locationImages: ArrayList<String> by mutableStateOf(ArrayList<String>())
+//                    val locationId = dao.insertLocation(location).toInt()
+                val metadata = StorageMetadata.Builder()
+                    .setContentType("image/jpeg")
+                    .build()
 
-
-                val uri = events.imagesUri
-                Log.d("uriList", "the first Uri in viewModel $uri")
-                var locationImages: List<String> by mutableStateOf(emptyList())
-                var number = 0
+                Log.d("uriList", "$locationImages + what is stored in the firebase ")
 
                 viewModelScope.launch {
-//                    dao.insertLocation(location)
-                    val locationId = dao.insertLocation(location).toInt()
-                    Log.d("locationID", "${locationId.toInt()}")
-                    val metadata = StorageMetadata.Builder()
-                        .setContentType("image/jpeg")
-                        .build()
+                    for (uri in Uri) {
 
-                    val job = viewModelScope.launch { Log.d("uriList", "$number The Looping Number")
-                        uri.forEach {
-                            number = number + 1
-                            val storageRef = storageRef.child("Locations/${number}")
-                            Log.d("uriList", "$number The Looping Number")
-                            if (it != null) {
-                                Log.d("uriList", "$it + in the loop")
-                                storageRef.putFile(it, metadata)
-                                    .addOnCompleteListener { storageTask ->
-                                        if (storageTask.isSuccessful) {
-                                            storageRef.downloadUrl
-                                                .addOnSuccessListener { uri ->
-                                                    val map = uri.toString()
-                                                    locationImages = locationImages + map
-                                                    Log.d("uriList", "$map +: the map ")
-                                                    Log.d(
-                                                        "uriList",
-                                                        "$locationImages +: The updated list of strings"
+                        val storageRef = storageRef.child("Locations/${uri.hashCode()}.jpeg")
+                        if (uri != null) {
+                            Log.d("uriList", "$uri + in the loop")
+                            storageRef.putFile(uri, metadata)
+                                .addOnCompleteListener { storageTask ->
+                                    if (storageTask.isSuccessful) {
+                                        storageRef.downloadUrl
+                                            .addOnSuccessListener { uri ->
+                                                _state.update {
+                                                    it.copy(
+                                                        active = false
                                                     )
-                                                    Log.d(
-                                                        "FirebaseManeno",
-                                                        "Successful in adding images to firebase"
-                                                    )
+                                                }
+                                                val map = uri.toString()
+                                                locationImages.add(map)
+                                                Log.d("uriList", "$map +: the map ")
+                                                val locationName = _state.value.locationName
+                                                val locationDescription =
+                                                    _state.value.locationDescription
+                                                Log.d("uriList", "$locationImages ")
+                                                Log.d(
+                                                    "uriList",
+                                                    "size of location images: ${locationImages.size} "
+                                                )
+                                                Log.d("uriList", "$Uri ")
+                                                Log.d("uriList", "size of uri: ${Uri.size} ")
 
+                                                if (locationName.isNotBlank() && locationDescription.isNotBlank() && locationImages.size == Uri.size) {
+                                                    Log.d("uriList", "Location being saved ")
+
+                                                    val location = location(
+                                                        locationName = locationName,
+                                                        description = locationDescription,
+                                                        locationImages = locationImages
+                                                    )
+                                                    runBlocking {
+                                                        Log.d("uriList", "Dao operation ")
+
+                                                        dao.insertLocation(location)
+                                                    }
+                                                    _state.update {
+                                                        it.copy(
+                                                            locationName = "",
+                                                            locationDescription = "",
+                                                            isAdding = false,
+                                                            active = true
+                                                        )
+                                                    }
                                                 }
 
-                                                .addOnFailureListener {
-                                                    Log.e("FirebaseManeno", it.toString())
-                                                }
-                                        }
+                                            }
+
+                                            .addOnFailureListener {
+                                                Log.e("FirebaseManeno", it.toString())
+                                            }
                                     }
-                            }
+                                }
                         }
-                        val locations = locationsData(
-                            locationId = locationId,
-                            locationImages = locationImages
-                        )
-                        Log.d("uriList", "$locationImages + what is stored in the firebase ")
-                        Log.d("uriList", "$locationId the locationId stored in firestore  ")
                     }
 
 
-                    val dblocations: DocumentReference = firebaseFirestore.collection("Locations").document(locationId.toString())
-                    dblocations.set(locations)
-                        .addOnCompleteListener { savingtoFireStore ->
-                            if (savingtoFireStore.isSuccessful) {
-                                Toast.makeText(
-                                    context,
-                                    "Added location profile successfully",
-                                    Toast.LENGTH_SHORT,
-
-                                    ).show()
-                                _state.update {it.copy(
-                                    isAdding = false
-                                )
-                                }
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    savingtoFireStore.exception.toString(),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-
-                        }
-
-
-
-
-
-
-
                 }
-                _state.update {
-                    it.copy(
-                        locationName = "",
-                        locationDescription = ""
-                    )
-                }
+
+
             }
 
             is Events.saveProperty -> {
-                val propertyName = _state.value.propertyName
-                val propertyDescription = _state.value.propertyDescription
-                val capacity = _state.value.capacity
-                val locationId = _state.value.locationId
-                val propertyAddress = _state.value.propertyAddress
-                if (propertyName.isBlank() || propertyDescription.isBlank() || capacity.isBlank() || propertyAddress.isBlank()) {
-                    return
-                }
-                val property = property(
-                    propertyName = propertyName,
-                    propertyDescription = propertyDescription,
-                    capacity = capacity,
-                    locationId = locationId,
-                    propertyAddress = propertyAddress
-                )
+                val UriList = events.imagesUri
+                val propertyImages by mutableStateOf(ArrayList<String>())
+                val metadata = StorageMetadata.Builder()
+                    .setContentType("image/jpeg")
+                    .build()
+                Log.d("uriList", "what enters the viewModel $UriList")
                 viewModelScope.launch {
-                    dao.insertProperty(property)
+                    _state.update {
+                        it.copy(
+                            active = false
+                        )
+                    }
+                    for (uri in UriList) {
+                        val storageRef = storageRef.child("Property/${uri.hashCode()}.jpeg")
+
+                        if (uri != null) {
+                            Log.d("uriList", "In the loop: $uri")
+                            storageRef.putFile(uri, metadata)
+                                .addOnCompleteListener { storageTask ->
+                                    if (storageTask.isSuccessful) {
+                                        storageRef.downloadUrl
+                                            .addOnSuccessListener { uri ->
+
+                                                val map = uri.toString()
+                                                propertyImages.add(map)
+                                                Log.d("uriList", "$propertyImages ")
+                                                Log.d(
+                                                    "uriList",
+                                                    "size of location images: ${propertyImages.size} "
+                                                )
+                                                Log.d("uriList", "$UriList ")
+                                                Log.d("uriList", "size of uri: ${UriList.size} ")
+                                                val propertyName = _state.value.propertyName
+                                                val propertyDescription = _state.value.propertyDescription
+                                                val capacity = _state.value.capacity
+                                                val locationId = _state.value.locationId
+                                                val propertyAddress = _state.value.propertyAddress
+                                                if (propertyName.isNotBlank() && propertyDescription.isNotBlank() && capacity.isNotBlank() && propertyAddress.isNotBlank() && propertyImages.size == UriList.size) {
+                                                    Log.d("uriList", "Entered if")
+                                                    val property = property(
+                                                        propertyName = propertyName,
+                                                        propertyDescription = propertyDescription,
+                                                        capacity = capacity,
+                                                        locationId = locationId,
+                                                        propertyAddress = propertyAddress,
+                                                        propertyImages = propertyImages
+                                                    )
+                                                    runBlocking {
+                                                        Log.d("uriList", "Saved")
+
+                                                        dao.insertProperty(property)
+                                                    }
+                                                    _state.update {
+                                                        it.copy(
+                                                            propertyName = "",
+                                                            propertyDescription = "",
+                                                            capacity = "",
+                                                            locationId = 0,
+                                                            propertyAddress = "",
+                                                            isAdding = false,
+                                                            active = true
+                                                        )
+                                                    }
+
+                                                }
+
+
+                                            }
+
+                                            .addOnFailureListener {
+                                                Log.e("FirebaseManeno", it.toString())
+                                            }
+                                    }
+                                }
+                        }
+                    }
+
                 }
-                _state.update {
-                    it.copy(
-                        propertyName = "",
-                        propertyDescription = "",
-                        capacity = "",
-                        locationId = 0,
-                        propertyAddress = ""
-                    )
-                }
+
+
+
+
 
             }
 
             is Events.saveTenant -> {
-                val fullName = _state.value.fullName
-                val email = _state.value.email
-                val phoneNumber = _state.value.phoneNumber
-                val propertyId = _state.value.propertyId
-                val hasPaid = _state.value.hasPaidRent
-                val uri = _state.value.uri
+                val ImageUri = events.imageUri
+                val metadata = StorageMetadata.Builder()
+                    .setContentType("image/jpeg")
+                    .build()
 
-                val tenant = tenant(
-                    fullName = fullName,
-                    email = email,
-                    phoneNumber = phoneNumber,
-                    propertyId = propertyId,
-                    uri = uri,
-                    hasPaid = hasPaid
-                )
+                viewModelScope.launch{
+                    val storageRef = storageRef.child("Tenants/${ImageUri.hashCode()}.jpeg")
+                    storageRef.putFile(ImageUri, metadata)
+                        .addOnCompleteListener { storageTask ->
+                            if (storageTask.isSuccessful) {
+                                storageRef.downloadUrl
+                                    .addOnSuccessListener { uri ->
 
-                viewModelScope.launch {
-                    dao.insertTenant(tenant)
+                                        val map = uri.toString()
+                                        Log.d("uriList", "The $uri being saved ")
+                                        val fullName = _state.value.fullName
+                                        val email = _state.value.email
+                                        val phoneNumber = _state.value.phoneNumber
+                                        val propertyId = _state.value.propertyId
+                                        val hasPaid = _state.value.hasPaidRent
+                                        if (fullName.isNotBlank() && email.isNotBlank() && phoneNumber.isNotBlank()) {
+                                            Log.d("uriList", "Entered if")
+                                            val tenant = tenant(
+                                                fullName = fullName,
+                                                email = email,
+                                                phoneNumber = phoneNumber,
+                                                propertyId = propertyId,
+                                                Imageuri = map,
+                                                hasPaid = hasPaid
+                                            )
+                                            runBlocking {
+                                                Log.d("uriList", "Saved")
+                                                dao.insertTenant(tenant)
+                                            }
+                                            _state.update {
+                                                it.copy(
+                                                    fullName = "",
+                                                    email = "",
+                                                    phoneNumber = "",
+                                                    propertyId = 0,
+                                                    isAdding = false,
+                                                    active = true
+                                                )
+                                            }
+
+                                        }
+
+
+                                    }
+
+                                    .addOnFailureListener {
+                                        Log.e("FirebaseManeno", it.toString())
+                                    }
+                            }
+                        }
+
                 }
-                _state.update {
-                    it.copy(
-                        fullName = "",
-                        email = "",
-                        phoneNumber = "",
-                        propertyId = 0
-                    )
-                }
+
             }
 
             is Events.Adding -> {
@@ -542,8 +583,20 @@ class PropertyViewModel(
                             }
                         }
                 }
+
             }
+//            is Events.IsActive -> {
+//                _state.update { it.copy(
+//                    active = true
+//                ) }
+//            }
+//            is Events.NotActive -> {
+//                _state.update { it.copy(
+//                    active = false
+//                ) }
+//            }
 
         }
     }
 }
+

@@ -1,6 +1,7 @@
 package com.example.kaaproperties.screens.location
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,7 +51,6 @@ import coil.compose.AsyncImage
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
-import com.example.kaaproperties.logic.ImagesList
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customCard
 import com.example.kaaproperties.screens.components.customScaffold
@@ -103,8 +103,7 @@ fun ListofLocations(
                     onDeleteEvent = { onEvents(Events.deleteLocation(location)) },
                     text1 = location.locationName,
                     text2 = location.description,
-                    id = location.locationId.toString(),
-                    collectionPath = "Locations",
+                    imageList = location.locationImages,
                     errorId = R.drawable.location1
                 )
 

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.transition.Transition
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,8 +48,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -120,7 +125,7 @@ fun Tenants(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .height(100.dp),
+                        .height(125.dp),
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
@@ -128,19 +133,45 @@ fun Tenants(
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(5.dp)
+                            .padding(5.dp, top = 20.dp)
                     ) {
 
 
                         Box(modifier = Modifier.weight(2f)) {
 
+                            var loading by remember {
+                                mutableStateOf(true)
+                            }
+                            if (loading){
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    this@Column.AnimatedVisibility(visible = true) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier
+                                                .padding(20.dp)
+                                                .size(80.dp),
+                                            color = Color.Gray
 
-                            if (tenant.uri != null) {
-                                Log.d("ProfileImageURI", tenant.uri + " in string")
-                                val imageUri = Uri.parse(tenant.uri)
-                                Log.d("ProfileImageURI", "${tenant.uri} actual uri")
+                                        )
 
 
+                                    }
+                                }
+
+
+                            }
+                            if (tenant.Imageuri != null) {
+                                AsyncImage(
+                                    model = tenant.Imageuri,
+                                    contentDescription = null,
+                                    onSuccess = { loading = false },
+                                    onError = { loading = false },
+                                    error = painterResource(id = R.drawable.profile),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .size(80.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
                             } else {
                                 Image(
                                     painter = painterResource(id = R.drawable.profile),
@@ -152,6 +183,7 @@ fun Tenants(
                             }
 
                         }
+                        Spacer(modifier = Modifier.width(20.dp))
                         Box(modifier = Modifier.weight(2f)) {
                             Column {
                                 Text(
@@ -308,8 +340,6 @@ fun PayingRent(
                 }
                 Button(onClick = {
                     onEvents(Events.confirmRent(hasPaid = false, tenantId = tenant.tenantId))
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
                 }) {
                     Text(text = "Has Not Paid Rent")
                 }
@@ -323,4 +353,10 @@ fun PayingRent(
             .height(400.dp)
             .width(350.dp)
     )
+}
+
+@Preview
+@Composable
+fun TenantCard() {
+
 }

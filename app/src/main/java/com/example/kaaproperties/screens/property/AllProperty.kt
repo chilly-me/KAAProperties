@@ -38,7 +38,6 @@ import androidx.navigation.NavController
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.Events
-import com.example.kaaproperties.logic.ImagesList
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customCard
 import com.example.kaaproperties.screens.components.customScaffold
@@ -101,8 +100,7 @@ fun AllProperty(
                     text2 = property.propertyDescription,
                     text3 = property.propertyAddress,
                     text4 = property.capacity,
-                    id = property.propertyId.toString(),
-                    collectionPath = "Property",
+                    imageList = property.propertyImages,
                     errorId = R.drawable.property2
                     )
 

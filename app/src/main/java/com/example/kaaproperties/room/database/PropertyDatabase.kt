@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.room.entities.tenant
+import com.example.kaaproperties.room.typeConverters.typeConverter
 
 @Database(
     entities = [
@@ -17,8 +20,9 @@ import com.example.kaaproperties.room.entities.tenant
         property::class,
         tenant::class,
     ],
-    version = 3
+    version = 1
 )
+@TypeConverters(typeConverter::class)
 abstract class PropertyDatabase: RoomDatabase() {
     abstract val propertyDao: PropertyDao
 

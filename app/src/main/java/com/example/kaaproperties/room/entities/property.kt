@@ -8,6 +8,7 @@ data class property(
     val propertyName: String,
     val propertyDescription: String,
     val propertyAddress: String,
+    val propertyImages: ArrayList<String>,
     val capacity: String,
     val locationId: Int,
     @PrimaryKey(autoGenerate = true)

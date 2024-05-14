@@ -11,10 +11,13 @@ interface Events {
     object showProperies: Events
     object showTenants: Events
     data class saveLocation(val imagesUri: List<Uri?>) : Events
-    object saveProperty: Events
-    object saveTenant: Events
+    data class saveProperty(val imagesUri: List<Uri?>): Events
+    data class saveTenant(val imageUri: Uri): Events
     object Adding: Events
     object NotAdding: Events
+
+//    object IsActive: Events
+//    object NotActive: Events
 
     data class selectProperty(val propertyId: Int, val propertyName: String): Events
 
@@ -27,7 +30,6 @@ interface Events {
     data class setcapacity(val capacity: String): Events
     data class setlocationId(val locationId: Int): Events
     data class setfullName(val fullName: String): Events
-    data class setUri(val uri: String): Events
     data class setemail(val email: String): Events
     data class setphoneNumber(val phoneNumber: String): Events
     data class setpropertyId(val propertyId: Int): Events
