@@ -15,7 +15,7 @@ sealed class Screens(val route: String) {
     data object AddingProperty: Screens("adding_property_screen")
     data object AddingTenants: Screens("adding_tenants_screen")
     data object AllProperty: Screens("all_property_screen")
-    data object AllTenants: Screens("all_tenants_screen")
+    data object PaymentByTenants: Screens("payment_by_tenants_screen")
 
     data object TenantsStatus: Screens("tenants_status")
     fun withArgs(vararg args: String): String{

@@ -6,12 +6,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Update
 import com.example.kaaproperties.room.entities.location
+import com.example.kaaproperties.room.entities.payments
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.room.entities.tenant
 import com.example.kaaproperties.room.relations.locationWithProperties
 import com.example.kaaproperties.room.relations.propertyWithTenants
+import com.example.kaaproperties.room.relations.tenantsWithPayments
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,6 +29,9 @@ interface PropertyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTenant(tenant: tenant)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPayment(payments: payments)
 
     @Query("DELETE FROM tenant")
     suspend fun deleteAllTenants()
@@ -75,6 +79,12 @@ interface PropertyDao {
     @Query("SELECT * FROM tenant WHERE tenantId = :tenantId")
     suspend fun getTenant(tenantId: Int): tenant
 
+    @Query("SELECT * FROM Property WHERE propertyId = :propertyId")
+    suspend fun getProperty(propertyId: Int): property
+
+    @Query("SELECT * FROM location WHERE locationId = :locationId")
+    suspend fun getLocation(locationId: Int): location
+
     @Transaction
     @Query("SELECT * FROM location WHERE locationId = :locationId")
     fun getLocationWithProperties(locationId: Int): Flow<List<locationWithProperties>>
@@ -82,4 +92,8 @@ interface PropertyDao {
     @Transaction
     @Query("SELECT * FROM property WHERE propertyId = :propertyId")
     fun getPropertyWithTenants(propertyId: Int): Flow<List<propertyWithTenants>>
+
+    @Transaction
+    @Query("SELECT * FROM tenant WHERE tenantId = :tenantId")
+    fun getTenantWithPayments(tenantId: Int): Flow<List<tenantsWithPayments>>
 }

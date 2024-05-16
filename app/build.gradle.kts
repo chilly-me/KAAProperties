@@ -143,6 +143,9 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.1.1")
 
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.androidx.compose.animation)
+    implementation("androidx.compose.material3:material3:1.3.0-alpha06")
+
 
 
 }

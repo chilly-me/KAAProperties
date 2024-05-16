@@ -2,14 +2,13 @@ package com.example.kaaproperties.screens.user
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,15 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,12 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,8 +42,12 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
+import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.UserData
+import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customButton
+import com.example.kaaproperties.screens.components.customScaffold
+import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
@@ -65,17 +62,33 @@ private lateinit var firebaseFirestore: FirebaseFirestore
 private lateinit var storageRef: StorageReference
 
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
-fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavController, context: Context) {
+fun UserProfileScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    context: Context,
+    onEvents: (Events) -> Unit,
+    states: states,
+) {
     auth = FirebaseAuth.getInstance()
     var isloading by remember {
         mutableStateOf(true)
     }
     var userId = auth.currentUser?.uid
-    val db:FirebaseFirestore = FirebaseFirestore.getInstance()
+    val db: FirebaseFirestore = FirebaseFirestore.getInstance()
     var userData by remember(userId) {
         mutableStateOf(UserData())
     }
+    var age by mutableStateOf("")
+
+    var name by mutableStateOf("")
+
+    var username by mutableStateOf("")
+
+    var profilePic by mutableStateOf("")
+
+    var email by  mutableStateOf("")
 
     if (userId != null) {
         val userRef = db.collection("Users").document(userId)
@@ -85,20 +98,42 @@ fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
                 if (user != null) {
                     userData = user
                 }
+                age = userData.age
+                name = userData.username
+                profilePic = userData.profilePic
+                email = userData.email
+                username = userData.username
                 isloading = false
 
             }
-        val age = userData.age
-        val name = userData.username
-        val profilePic = userData.profilePic
+            .addOnFailureListener {
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    name = currentUser.displayName.toString()
+                }
+                if (currentUser != null) {
+                    email = currentUser.email.toString()
+                }
+                if (currentUser != null) {
+                    profilePic = currentUser.photoUrl.toString()
+                }
+
+
+            }
+
+
         Log.d("UserInfo", "user age: $age, username: $name, profilePic: $profilePic")
-    }else{
+    } else {
         navController.navigate(Screens.Locations.route)
         Toast.makeText(context, "You are not logged in", Toast.LENGTH_SHORT).show()
     }
-    if (isloading){
+    if (isloading) {
 
-        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             AnimatedVisibility(visible = true) {
                 CircularProgressIndicator(
                     modifier = Modifier
@@ -110,7 +145,7 @@ fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
 
             }
         }
-    }else{
+    } else {
 
         Column(
             modifier = Modifier
@@ -136,7 +171,7 @@ fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
                     contentScale = ContentScale.FillBounds
                 )
                 AsyncImage(
-                    model = userData.profilePic,
+                    model = profilePic,
                     contentDescription = "Profile Picture",
                     error = painterResource(id = R.drawable.profile),
                     placeholder = painterResource(id = R.drawable.profile),
@@ -186,29 +221,36 @@ fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
 
 
             }
-            Text(
-                text = userData.username,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                style = TextStyle(
-                    color = Color(0xFF32357A)
-                ),
-                modifier = Modifier
-                    .padding(top = 16.dp)
-            )
-            customRow(imgId = R.drawable.ic_email, contentDescription = "Email", text = userData.email)
+            username?.let {
+                Text(
+                    text = it,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(
+                        color = Color(0xFF32357A)
+                    ),
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                )
+            }
+            customRow(imgId = R.drawable.ic_email, contentDescription = "Email", text = email)
             customRow(imgId = R.drawable.ic_age, contentDescription = "Age", text = userData.age)
-            customRow(imgId = R.drawable.ic_address, contentDescription = "Email", text = userData.address)
-            Spacer(modifier = Modifier.weight(1f))
+            customRow(
+                imgId = R.drawable.ic_address,
+                contentDescription = "Email",
+                text = userData.address
+            )
+            Spacer(modifier = Modifier.weight(0.4f))
             customButton(
                 onClick = {
                     auth.signOut()
-
                     Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
                     navController.navigate(Screens.WelcomeScreen.route)
                 },
+                color = 0xFFFA2323,
                 buttonText = "Sign Out",
-                iconId = null
+                iconId = null,
+                width = 0.8f
             )
 
 
@@ -220,7 +262,14 @@ fun UserProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
 
 
 @Composable
-fun customRow(modifier: Modifier = Modifier, imgId: Int, contentDescription: String, text: String) {
+fun customRow(
+    modifier: Modifier = Modifier,
+    imgId: Int?,
+    contentDescription: String,
+    text: String,
+    fontWeight: FontWeight = FontWeight.Normal,
+    clickIcon: (() -> Unit)? = null,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,17 +282,24 @@ fun customRow(modifier: Modifier = Modifier, imgId: Int, contentDescription: Str
                 .height(40.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = imgId),
-                contentDescription = contentDescription,
-                modifier = modifier
-                    .padding(end = 5.dp)
-            )
+            imgId?.let { painterResource(id = it) }?.let {
+                Image(
+                    painter = it,
+                    contentDescription = contentDescription,
+                    modifier = modifier
+                        .padding(end = 5.dp)
+                        .clickable {
+                            if (clickIcon != null) {
+                                clickIcon()
+                            }
+                        }
+                )
+            }
 
         }
         Column(
             modifier = modifier
-                .padding(start = 16.dp,)
+                .padding(start = 16.dp)
                 .weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
@@ -251,7 +307,14 @@ fun customRow(modifier: Modifier = Modifier, imgId: Int, contentDescription: Str
                 text = text,
                 color = Color.Black,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                fontFamily = AlegreyoSansFontFamily,
+                fontWeight = fontWeight,
+                modifier = Modifier
+                    .clickable {
+                        if (clickIcon != null) {
+                            clickIcon()
+                        }
+                    }
             )
 
         }

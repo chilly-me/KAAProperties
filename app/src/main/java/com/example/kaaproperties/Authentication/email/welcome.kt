@@ -196,7 +196,7 @@ fun GoogleAuth(
             scope.launch {
                 val authResult = Firebase.auth.signInWithCredential(credential).await()
 
-                Toast.makeText(context, "Successful Login", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Successful Login   Q1`1`", Toast.LENGTH_SHORT).show()
                 navController.navigate(Screens.Locations.route){
                     navController.popBackStack()
                 }

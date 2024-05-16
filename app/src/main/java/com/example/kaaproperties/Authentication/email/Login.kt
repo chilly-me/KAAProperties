@@ -2,7 +2,6 @@ package com.example.kaaproperties.Authentication.email
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -43,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.kaaproperties.PropertyViewModel
-import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.screens.components.customButton

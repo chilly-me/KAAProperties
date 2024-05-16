@@ -90,7 +90,6 @@ fun AllProperty(
                         onEvents(
                             Events.selectProperty(
                                 property.propertyId,
-                                property.propertyName
                             )
                         )
                     },

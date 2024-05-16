@@ -19,7 +19,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
@@ -122,10 +121,15 @@ class PropertyViewModel(
                             _state.update {
                                 it.copy(
                                     property = listofProperties.flatMap { it.properties },
-                                    locationName = events.locationName
                                 )
                             }
                         }
+                    val locationSelected = dao.getLocation(events.locationId)
+                    _state.update {
+                        it.copy(
+                            selectedLocation = locationSelected
+                        )
+                    }
                 }
             }
 
@@ -140,11 +144,16 @@ class PropertyViewModel(
                             _state.update {
                                 it.copy(
                                     tenants = listofTenants.flatMap { it.tenants },
-                                    propertyName = events.propertyName
                                 )
                             }
 
                         }
+                    val propertySelected = dao.getProperty(events.propertyId)
+                    _state.update {
+                        it.copy(
+                            selectedProperty = propertySelected
+                        )
+                    }
 
 
                 }
@@ -194,6 +203,13 @@ class PropertyViewModel(
                 _state.update {
                     it.copy(
                         capacity = events.capacity
+                    )
+                }
+            }
+            is Events.setCost -> {
+                _state.update {
+                    it.copy(
+                        propertyCost = events.cost
                     )
                 }
             }
@@ -355,6 +371,7 @@ class PropertyViewModel(
                                                 val capacity = _state.value.capacity
                                                 val locationId = _state.value.locationId
                                                 val propertyAddress = _state.value.propertyAddress
+                                                val cost = _state.value.propertyCost
                                                 if (propertyName.isNotBlank() && propertyDescription.isNotBlank() && capacity.isNotBlank() && propertyAddress.isNotBlank() && propertyImages.size == UriList.size) {
                                                     Log.d("uriList", "Entered if")
                                                     val property = property(
@@ -363,7 +380,8 @@ class PropertyViewModel(
                                                         capacity = capacity,
                                                         locationId = locationId,
                                                         propertyAddress = propertyAddress,
-                                                        propertyImages = propertyImages
+                                                        propertyImages = propertyImages,
+                                                        cost = cost
                                                     )
                                                     runBlocking {
                                                         Log.d("uriList", "Saved")
@@ -504,16 +522,30 @@ class PropertyViewModel(
                 }
             }
 
-            is Events.selectTenant -> {
+            is Events.payments -> {
                 viewModelScope.launch {
-                    val tenant_selected = dao.getTenant(events.tenantId)
-                    _state.update {
-                        it.copy(
-                            selectedtenant = tenant_selected
-                        )
-                    }
+                    dao.getTenantWithPayments(events.tenantId)
+                        .flowOn(Dispatchers.IO)
+                        .collect { tenants ->
+                            _state.update {
+                                it.copy(
+                                    payments = tenants.flatMap { it.payments },
+                                )
+                            }
+                        }
+
                 }
             }
+            is Events.selectTenant -> {
+                viewModelScope.launch {
+                    val selectedTenant = dao.getTenant(events.tenantId)
+                    _state.update { it.copy(
+                        selectedTenant = selectedTenant
+                    ) }
+
+                }
+            }
+
 
             is Events.searchTenant -> {
                 viewModelScope.launch {

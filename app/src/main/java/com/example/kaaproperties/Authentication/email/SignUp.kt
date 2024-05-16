@@ -2,7 +2,6 @@ package com.example.kaaproperties.Authentication.email
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.util.Patterns
 import android.widget.Toast
@@ -48,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.kaaproperties.PropertyViewModel
-import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.UserData

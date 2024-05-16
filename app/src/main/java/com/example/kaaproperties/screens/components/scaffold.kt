@@ -7,7 +7,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,7 +30,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -40,7 +38,6 @@ import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.states
-import com.example.kaaproperties.screens.location.ListofLocations
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -53,7 +50,7 @@ fun customScaffold(
     titleText: String,
     locationSelected: Boolean = false,
     propertiesSelected: Boolean = false,
-    tenantsSelected: Boolean = false,
+    profileSelected: Boolean = false,
     floatingActionButtonId: Int? = R.drawable.ic_add,
     titleIcon: Int,
     screen: @Composable () -> Unit
@@ -103,18 +100,19 @@ fun customScaffold(
                     label = { Text(text = "All Properties ", color = Color.White) }
                 )
                 NavigationBarItem(
-                    selected = tenantsSelected,
-                    onClick = { navController.navigate(Screens.AllTenants.route) },
-                    icon = { Icon(
-                        painter = painterResource(id = R.drawable.ic_groups),
-                        contentDescription = "Tenants",
-                        tint = if (tenantsSelected) {
-                            Color.Black
-                        } else {
-                            Color.White
-                        }
-                    ) },
-                    label = { Text(text = "All Tenants", color = Color.White) }
+                    selected = profileSelected,
+                    onClick = { navController.navigate(Screens.UserDetails.route) },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_person_24),
+                            contentDescription = "Profile",
+                            tint = if (profileSelected) {
+                                Color.Black
+                            } else {
+                                Color.White
+                            }
+                        ) },
+                    label = { Text(text = "Profile", color = Color.White) }
                 )
 
             }
@@ -142,7 +140,7 @@ fun customScaffold(
                      .height(125.dp)
                      .background(Color(0xDA035092))
              ) {
-                 val (topImg, profile, title, icon, user) = createRefs()
+                 val (topImg, title, icon, user) = createRefs()
 
 
                  Image(
@@ -169,18 +167,6 @@ fun customScaffold(
                          },
                      contentScale = ContentScale.Crop,
                      colorFilter = ColorFilter.tint(Color.Gray)
-                 )
-                 Image(
-                     painter = painterResource(id = R.drawable.profilelogo),
-                     contentDescription = null,
-                     modifier = Modifier
-                         .constrainAs(profile) {
-                             end.linkTo(parent.end, margin = 15.dp)
-                             top.linkTo(parent.top, margin = 15.dp)
-                         }
-                         .size(40.dp)
-                         .clickable { navController.navigate(Screens.UserDetails.route) },
-                     colorFilter = ColorFilter.tint(Color.White)
                  )
 
                  Text(

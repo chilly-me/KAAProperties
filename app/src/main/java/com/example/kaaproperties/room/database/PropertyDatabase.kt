@@ -4,13 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
+import com.example.kaaproperties.room.entities.payments
 import com.example.kaaproperties.room.entities.tenant
 import com.example.kaaproperties.room.typeConverters.typeConverter
 
@@ -19,6 +17,7 @@ import com.example.kaaproperties.room.typeConverters.typeConverter
         location::class,
         property::class,
         tenant::class,
+        payments::class
     ],
     version = 1
 )
@@ -29,17 +28,7 @@ abstract class PropertyDatabase: RoomDatabase() {
     companion object{
         @Volatile
         private var INSTANCE: PropertyDatabase ?= null
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Add the new column 'hasPaid' to the 'tenant' table
-                db.execSQL("ALTER TABLE tenant ADD COLUMN hasPaid INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-        val MIGRATION_2_3 = object : Migration(2,3){
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE tenant ADD COLUMN uri TEXT")
-            }
-        }
+
         fun getInstance(context: Context): PropertyDatabase{
             synchronized(this){
                 return INSTANCE ?: Room.databaseBuilder(
@@ -47,8 +36,7 @@ abstract class PropertyDatabase: RoomDatabase() {
                     PropertyDatabase::class.java,
                     "Property_db"
                 )
-                    .addMigrations(MIGRATION_1_2)
-                    .addMigrations(MIGRATION_2_3)
+
                     .build().also {
                     INSTANCE = it
                 }

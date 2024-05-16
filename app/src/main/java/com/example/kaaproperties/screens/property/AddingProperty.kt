@@ -84,6 +84,16 @@ fun AddingProperty(
                 placeHolder = "40",
                 iconId = null
             )
+            customTextField2(
+                value = state.propertyCost,
+                onValueChange = {
+                    onEvent(
+                        Events.setCost(it)
+                    )
+                },
+                placeHolder = "Ksh. 10,000",
+                iconId = null
+            )
         },
         imageUriList = {ImageUriList = it},
         saveButton = {

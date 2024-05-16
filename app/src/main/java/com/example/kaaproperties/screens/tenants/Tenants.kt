@@ -4,13 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.transition.Transition
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,9 +33,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,17 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.example.kaaproperties.MainActivity
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
@@ -73,13 +65,15 @@ fun scaffoldForTenants(
     states: states,
     propertyId: String,
     context: Context,
+    propertyName: String,
+    cost: String
 ) {
     customScaffold(
         navController = navController,
         onEvents = onEvents,
         states = states,
         ifAdding = { /*TODO*/ },
-        titleText = "Tenants in ${states.propertyName}",
+        titleText = "Tenants in ${propertyName}",
         titleIcon = R.drawable.ic_groups,
 
     ) {
@@ -92,7 +86,9 @@ fun scaffoldForTenants(
                 state = states,
                 navController = navController,
                 propertyId = propertyId,
-                context = context
+                context = context,
+                propertyName = propertyName,
+                cost = cost
             )
         }
     }
@@ -106,6 +102,8 @@ fun Tenants(
     navController: NavController,
     propertyId: String,
     context: Context,
+    propertyName: String,
+    cost: String
 ) {
 
     LazyColumn {
@@ -121,6 +119,8 @@ fun Tenants(
                     onClick = {
                         selected.value = !selected.value
                         onEvent(Events.selectTenant(tenant.tenantId))
+                        onEvent(Events.payments(tenant.tenantId))
+                        navController.navigate(Screens.PaymentByTenants.withArgs(propertyId, cost, propertyName))
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,7 +175,7 @@ fun Tenants(
                             } else {
                                 Image(
                                     painter = painterResource(id = R.drawable.profile),
-                                    contentDescription = "Real Estate 1",
+                                    contentDescription = "Profile",
                                     Modifier
                                         .aspectRatio(2f)
 //                            .size(40.dp)
@@ -257,15 +257,15 @@ fun Tenants(
                                         contentDescription = "Paid Rent"
                                     )
                                 }
-                                if (selected.value) {
-                                    PayingRent(
-                                        onEvents = onEvent,
-                                        context = context,
-                                        navController = navController,
-                                        states = state
-                                    )
-                                    Log.d("TenantName", "tenanatName: ${tenant.fullName}")
-                                }
+//                                if (selected.value) {
+//                                    PayingRent(
+//                                        onEvents = onEvent,
+//                                        context = context,
+//                                        navController = navController,
+//                                        states = state
+//                                    )
+//                                    Log.d("TenantName", "tenanatName: ${tenant.fullName}")
+//                                }
                                 IconButton(onClick = {
                                     SendingEmails(
                                         email = tenant.email,
@@ -317,43 +317,7 @@ fun SendingEmails(email: String, hasPaid: Boolean, name: String, context: Contex
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PayingRent(
-    onEvents: (Events) -> Unit,
-    context: Context,
-    navController: NavController,
-    states: states,
-) {
-    val tenant = states.selectedtenant
-    AlertDialog(
-        onDismissRequest = { navController.navigate(Screens.Tenants.withArgs(states.propertyId.toString())) },
-        title = { Text(text = "Has ${tenant.fullName} paid rent") },
-        confirmButton = {
-            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Button(onClick = {
-                    onEvents(Events.confirmRent(hasPaid = true, tenantId = tenant.tenantId))
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Text(text = "Has Paid Rent")
-                }
-                Button(onClick = {
-                    onEvents(Events.confirmRent(hasPaid = false, tenantId = tenant.tenantId))
-                }) {
-                    Text(text = "Has Not Paid Rent")
-                }
-                Button(onClick = { navController.navigate(Screens.Tenants.withArgs(states.propertyId.toString())) }) {
-                    Text(text = "Dismiss")
 
-                }
-            }
-        },
-        modifier = Modifier
-            .height(400.dp)
-            .width(350.dp)
-    )
-}
 
 @Preview
 @Composable
