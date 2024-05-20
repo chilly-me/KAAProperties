@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -35,12 +36,10 @@ import com.example.kaaproperties.screens.components.customTextField2
 fun AddingTenants(
     state: states,
     onEvent: (Events) -> Unit,
-    propertyId: String,
     navController: NavController,
     context: Context,
 ) {
-    val _propertyId = propertyId.toInt()
-    onEvent(Events.setpropertyId(_propertyId))
+    onEvent(Events.setpropertyId(state.selectedProperty.propertyId))
 
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
@@ -48,7 +47,7 @@ fun AddingTenants(
     customDailog(
         onDismiss = {
             onEvent(Events.NotAdding)
-            navController.navigate(Screens.Tenants.withArgs(propertyId)) {
+            navController.navigate(Screens.Tenants.route) {
                 navController.popBackStack()
                 Log.d("isStackPopped", "${navController.popBackStack()}")
             }
@@ -103,7 +102,8 @@ fun AddingTenants(
                     )
                 },
                 placeHolder = "tenant@gmail.com",
-                iconId = null
+                iconId = null,
+                keyboardType = KeyboardType.Email
             )
             customTextField2(
                 value = state.phoneNumber,
@@ -113,19 +113,19 @@ fun AddingTenants(
                     )
                 },
                 placeHolder = "0712345678",
-                iconId = null
+                iconId = null,
+                keyboardType = KeyboardType.Number
             )
         },
-        imageUriList = {},
+        imageUriList = {null},
         saveButton = {
             customButton(
                 onClick = {
                     selectedImageUri?.let { Events.saveTenant(it) }?.let { onEvent(it) }
-                    navController.navigate(Screens.Tenants.withArgs(propertyId)) {
+                    navController.navigate(Screens.Tenants.route) {
                         navController.popBackStack()
                         Log.d("isStackPopped", "${navController.popBackStack()}")
                     }
-                    onEvent(Events.NotAdding)
                 },
                 buttonText = "Save Tenant",
                 iconId = R.drawable.baseline_save_24,

@@ -2,7 +2,9 @@ package com.example.kaaproperties
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +15,7 @@ import com.example.kaaproperties.room.dao.PropertyDao
 import com.example.kaaproperties.room.entities.location
 import com.example.kaaproperties.room.entities.property
 import com.example.kaaproperties.logic.states
+import com.example.kaaproperties.room.entities.payments
 import com.example.kaaproperties.room.entities.tenant
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -108,10 +111,24 @@ class PropertyViewModel(
                 }
 
             }
+            is Events.showPayments -> {
+                viewModelScope.launch {
+                    dao.getAllPayments()
+                        .flowOn(Dispatchers.IO)
+                        .collect { payments ->
+                            _state.update {
+                                it.copy(
+                                    payments = payments
+                                )
+                            }
+                        }
+                }
+            }
 
             is Events.selectLocation -> {
 
                 viewModelScope.launch {
+
                     dao.getLocationWithProperties(events.locationId)
                         .flowOn(Dispatchers.IO)
                         .catch { e ->
@@ -124,7 +141,12 @@ class PropertyViewModel(
                                 )
                             }
                         }
+
+                }
+
+                viewModelScope.launch {
                     val locationSelected = dao.getLocation(events.locationId)
+
                     _state.update {
                         it.copy(
                             selectedLocation = locationSelected
@@ -148,14 +170,17 @@ class PropertyViewModel(
                             }
 
                         }
+
+
+
+                }
+                viewModelScope.launch {
                     val propertySelected = dao.getProperty(events.propertyId)
                     _state.update {
                         it.copy(
                             selectedProperty = propertySelected
                         )
                     }
-
-
                 }
             }
 
@@ -266,6 +291,11 @@ class PropertyViewModel(
 
                 viewModelScope.launch {
                     for (uri in Uri) {
+                        _state.update {
+                            it.copy(
+                                active = false
+                            )
+                        }
 
                         val storageRef = storageRef.child("Locations/${uri.hashCode()}.jpeg")
                         if (uri != null) {
@@ -275,11 +305,7 @@ class PropertyViewModel(
                                     if (storageTask.isSuccessful) {
                                         storageRef.downloadUrl
                                             .addOnSuccessListener { uri ->
-                                                _state.update {
-                                                    it.copy(
-                                                        active = false
-                                                    )
-                                                }
+
                                                 val map = uri.toString()
                                                 locationImages.add(map)
                                                 Log.d("uriList", "$map +: the map ")
@@ -321,6 +347,13 @@ class PropertyViewModel(
 
                                             .addOnFailureListener {
                                                 Log.e("FirebaseManeno", it.toString())
+                                                Toast.makeText(context, "Failed to add location", Toast.LENGTH_SHORT).show()
+                                                _state.update {
+                                                    it.copy(
+                                                        active = true,
+                                                        isAdding = false,
+                                                    )
+                                                }
                                             }
                                     }
                                 }
@@ -407,6 +440,14 @@ class PropertyViewModel(
 
                                             .addOnFailureListener {
                                                 Log.e("FirebaseManeno", it.toString())
+                                                Toast.makeText(context, "Failed to add property, try again", Toast.LENGTH_SHORT).show()
+                                                _state.update {
+                                                    it.copy(
+                                                        active = true,
+                                                        isAdding = false,
+                                                    )
+                                                }
+                                                Log.e("FirebaseManeno", it.toString())
                                             }
                                     }
                                 }
@@ -428,6 +469,11 @@ class PropertyViewModel(
                     .build()
 
                 viewModelScope.launch{
+                    _state.update {
+                        it.copy(
+                            active = true,
+                        )
+                    }
                     val storageRef = storageRef.child("Tenants/${ImageUri.hashCode()}.jpeg")
                     storageRef.putFile(ImageUri, metadata)
                         .addOnCompleteListener { storageTask ->
@@ -474,12 +520,39 @@ class PropertyViewModel(
 
                                     .addOnFailureListener {
                                         Log.e("FirebaseManeno", it.toString())
+                                        Toast.makeText(context, "Failed to add tenant, try again", Toast.LENGTH_SHORT).show()
+                                        _state.update {
+                                            it.copy(
+                                                active = true,
+                                                isAdding = false,
+                                            )
+                                        }
+                                        Log.e("FirebaseManeno", it.toString())
                                     }
                             }
                         }
 
                 }
 
+            }
+            is Events.savePayment -> {
+                val tenantId = _state.value.tenantId
+                val amount = _state.value.amount
+                val month = _state.value.month
+                val propertyId = _state.value.propertyId
+                viewModelScope.launch {
+                    if (tenantId != null && amount.isNotBlank() && month.isNotBlank()){
+                        val payments = payments(tenantId = tenantId, amount = amount, month = month, propertyId = propertyId)
+                        dao.insertPayment(payments)
+                        _state.update { it.copy(
+                            tenantId = 0,
+                            propertyId = 0,
+                            amount = "",
+                            month = ""
+                        ) }
+                    }
+
+                }
             }
 
             is Events.Adding -> {
@@ -616,6 +689,21 @@ class PropertyViewModel(
                         }
                 }
 
+            }
+            is Events.setAmount -> {
+                _state.update { it.copy(
+                    amount = events.amount
+                ) }
+            }
+            is Events.setTenantId -> {
+                _state.update { it.copy(
+                    tenantId = events.tenantId
+                ) }
+            }
+            is Events.setMonth -> {
+                _state.update { it.copy(
+                    month = events.month
+                ) }
             }
 //            is Events.IsActive -> {
 //                _state.update { it.copy(

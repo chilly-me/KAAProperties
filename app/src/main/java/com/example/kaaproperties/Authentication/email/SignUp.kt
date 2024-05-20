@@ -3,6 +3,7 @@ package com.example.kaaproperties.Authentication.email
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,6 +43,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -198,7 +200,8 @@ fun RegistrationUI(
                     placeHolder = "Email Address",
                     onValueChange = { email = it },
                     iconId = R.drawable.ic_email,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    keyboardType = KeyboardType.Email
                 )
                 customPasswordTextField(
                     value = password,
@@ -227,7 +230,8 @@ fun RegistrationUI(
                     placeHolder = "Age",
                     iconId = R.drawable.ic_age,
                     onValueChange = { age = it },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    keyboardType = KeyboardType.Number
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -243,8 +247,12 @@ fun RegistrationUI(
                     onClick = {
                         validatePassword(password, context)
                         validateEmail(email, context)
-                        if (profilePic == null){
-                            Toast.makeText(context, "Upload your profile picture", Toast.LENGTH_SHORT).show()
+                        if (profilePic == null) {
+                            Toast.makeText(
+                                context,
+                                "Upload your profile picture",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         val passwordvalidation = validatePassword(password, context)
                         val emailvalidation = validateEmail(email, context)
@@ -349,21 +357,28 @@ fun RegisterUser(
 }
 
 fun saveUserData(
-    userId: String,
-    email: String,
-    username: String,
+    userId: String?,
+    email: String?,
+    username: String?,
     profilePic: Uri?,
-    address: String,
-    age: String,
+    ProfileUrl: String?,
+    address: String?,
+    age: String?,
     context: Context,
     navController: NavController,
-    viewModel: PropertyViewModel,
+    viewModel: PropertyViewModel?,
 ) {
+    Log.d("saving", "Entered composable")
+
     initVar()
     storageRef = storageRef.child(System.currentTimeMillis().toString())
-    profilePic?.let {
+    Log.d("saving", "profile picture: $profilePic")
+    Log.d("saving", "is userId null in composable? $userId")
+
+    profilePic?.let { it ->
         storageRef.putFile(it)
             .addOnCompleteListener { StorageTask ->
+                Log.d("saving", "saving to firebase storage")
                 if (StorageTask.isSuccessful) {
                     storageRef.downloadUrl.addOnSuccessListener { uri ->
                         val map = uri.toString()
@@ -376,34 +391,44 @@ fun saveUserData(
                                 address = address,
                                 age = age,
                             )
-                        val dbUserData: DocumentReference =
-                            firebaseFirestore.collection("Users").document(userId)
-                        dbUserData.set(UserData)
-                            .addOnCompleteListener {
-                                if (it.isSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "Created user profile successfully",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    navController.navigate(Screens.Locations.route){
-                                        navController.popBackStack()
-                                    }
+                        Log.d("saving", "is userId null in composable? $userId")
+
+                        if (userId != null) {
+                            val dbUserData: DocumentReference =
+                                firebaseFirestore.collection("Users").document(userId)
+                            dbUserData.set(UserData)
+                                .addOnCompleteListener {
+                                    Log.d("saving", "saving to firestore")
+
+                                    if (it.isSuccessful) {
+                                        Toast.makeText(
+                                            context,
+                                            "Created user profile successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        navController.navigate(Screens.Locations.route) {
+                                            navController.popBackStack()
+                                        }
 
 //                                    @Override
 //                                    fun onBackPressed(){
 //                                        moveTask
 //                                    }
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        it.exception?.message,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    viewModel.isNotLoading()
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            it.exception?.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        viewModel?.isNotLoading()
 
+                                    }
                                 }
-                            }
+                                .addOnFailureListener { exception ->
+                                    Log.d("saving", "$exception")
+                                }
+                        }
+
                     }
                 } else {
                     Toast.makeText(context, StorageTask.exception?.message, Toast.LENGTH_SHORT)
@@ -415,6 +440,7 @@ fun saveUserData(
     }
 
 }
+
 
 fun registerUser(
     email: String,
@@ -436,15 +462,17 @@ fun registerUser(
             if (authenticatingtask.isSuccessful) {
                 saveUserData(
                     userId = auth.currentUser?.uid ?: "",
-                    email,
-                    username,
-                    profilePic,
-                    address,
-                    age,
-                    context,
-                    navController,
-                    viewModel
-                )/*Initial - giving this error: Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type FirebaseUser?*/
+                    email = email,
+                    username = username,
+                    profilePic = profilePic,
+                    ProfileUrl = address,
+                    address = address,
+                    age = age,
+                    context = context,
+                    navController = navController,
+                    viewModel = viewModel
+                )
+                /*Initial - giving this error: Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type FirebaseUser?*/
 //                auth.currentUser?.let { saveUserData(it.uid, email,username, profilePic, address, age, context, navController)}
                 Toast.makeText(
                     context,

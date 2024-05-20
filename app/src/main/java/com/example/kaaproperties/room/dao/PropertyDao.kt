@@ -59,6 +59,9 @@ interface PropertyDao {
     @Query("SELECT * FROM tenant")
     fun getAllTenants(): Flow<List<tenant>>
 
+    @Query("SELECT * FROM payments")
+    fun getAllPayments(): Flow<List<payments>>
+
     @Query("SELECT * FROM tenant WHERE fullName LIKE :name|| '%' ")
     fun searchForTenants(name: String): Flow<List<tenant>>
 

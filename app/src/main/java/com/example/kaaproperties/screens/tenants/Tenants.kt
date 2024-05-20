@@ -63,32 +63,26 @@ fun scaffoldForTenants(
     navController: NavController,
     onEvents: (Events) -> Unit,
     states: states,
-    propertyId: String,
     context: Context,
-    propertyName: String,
-    cost: String
 ) {
     customScaffold(
         navController = navController,
         onEvents = onEvents,
         states = states,
         ifAdding = { /*TODO*/ },
-        titleText = "Tenants in ${propertyName}",
+        titleText = "Tenants in ${states.selectedProperty.propertyName}",
         titleIcon = R.drawable.ic_groups,
 
     ) {
         Column(modifier = Modifier) {
             if (states.isAdding) {
-                navController.navigate(Screens.AddingTenants.withArgs(propertyId))
+                AddingTenants(state = states, onEvent = onEvents, navController = navController, context = context)
             }
             Tenants(
                 onEvent = onEvents,
                 state = states,
                 navController = navController,
-                propertyId = propertyId,
                 context = context,
-                propertyName = propertyName,
-                cost = cost
             )
         }
     }
@@ -100,10 +94,7 @@ fun Tenants(
     state: states,
     onEvent: (Events) -> Unit,
     navController: NavController,
-    propertyId: String,
     context: Context,
-    propertyName: String,
-    cost: String
 ) {
 
     LazyColumn {
@@ -120,7 +111,7 @@ fun Tenants(
                         selected.value = !selected.value
                         onEvent(Events.selectTenant(tenant.tenantId))
                         onEvent(Events.payments(tenant.tenantId))
-                        navController.navigate(Screens.PaymentByTenants.withArgs(propertyId, cost, propertyName))
+                        navController.navigate(Screens.PaymentByTenants.route)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,9 +124,8 @@ fun Tenants(
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(5.dp, top = 20.dp)
+                            .padding(5.dp, top = 10.dp)
                     ) {
-
 
                         Box(modifier = Modifier.weight(2f)) {
 
@@ -168,9 +158,10 @@ fun Tenants(
                                     error = painterResource(id = R.drawable.profile),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .size(80.dp)
+                                        .size(100.dp)
                                         .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
+                                    contentScale = ContentScale.Crop,
+
                                 )
                             } else {
                                 Image(
@@ -213,26 +204,6 @@ fun Tenants(
 
 
                         }
-                        if (tenant.hasPaid) {
-                            val colour = Color.Green
-                            Box(
-                                modifier = Modifier
-                                    .weight(0.5f)
-                                    .background(colour), contentAlignment = Alignment.TopCenter
-                            ) {
-                                Text(text = "")
-                            }
-                        } else {
-                            val colour = Color.Red
-                            Box(
-                                modifier = Modifier
-                                    .weight(0.5f)
-                                    .background(colour), contentAlignment = Alignment.TopCenter
-                            ) {
-                                Text(text = "")
-
-                            }
-                        }
 
                         Box(
                             modifier = Modifier
@@ -266,19 +237,7 @@ fun Tenants(
 //                                    )
 //                                    Log.d("TenantName", "tenanatName: ${tenant.fullName}")
 //                                }
-                                IconButton(onClick = {
-                                    SendingEmails(
-                                        email = tenant.email,
-                                        hasPaid = tenant.hasPaid,
-                                        name = tenant.fullName,
-                                        context = context
-                                    )
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_email),
-                                        contentDescription = "Send Email"
-                                    )
-                                }
+
                             }
 
                         }
@@ -293,24 +252,24 @@ fun Tenants(
 
 }
 
-fun SendingEmails(email: String, hasPaid: Boolean, name: String, context: Context) {
+fun SendingEmails(email: String, positiveReview: Boolean, name: String, context: Context, month: String) {
     val intent = Intent(Intent.ACTION_SEND)
 
     val emailAddress = arrayOf(email)
 
     intent.setType("message/rfc822")
     intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
-    if (hasPaid) {
-        intent.putExtra(Intent.EXTRA_SUBJECT, "Appreciation for your rent payment")
+    if (positiveReview) {
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Appreciation for your rent payment for the month of $month")
         intent.putExtra(
             Intent.EXTRA_TEXT,
             "Kaa Properties thanks you $name for paying your rent in time. We look forward to better times ahead together"
         )
     } else {
-        intent.putExtra(Intent.EXTRA_SUBJECT, "Reminder for your rent")
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Reminder for your rent for the month of $month")
         intent.putExtra(
             Intent.EXTRA_TEXT,
-            "Kaa Properties reminds you $name to pay your rent before the end of the month."
+            "Kaa Properties reminds you $name to pay your rent before the end of the $month."
         )
     }
     context.startActivity(Intent.createChooser(intent, "Choose an Email Client"))

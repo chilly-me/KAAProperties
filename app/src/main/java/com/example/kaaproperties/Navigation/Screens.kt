@@ -11,9 +11,7 @@ sealed class Screens(val route: String) {
     data object Property: Screens("property_screen")
     data object Tenants: Screens("tenants_screen")
 
-    data object AddingLocations: Screens("adding_locations_screen")
     data object AddingProperty: Screens("adding_property_screen")
-    data object AddingTenants: Screens("adding_tenants_screen")
     data object AllProperty: Screens("all_property_screen")
     data object PaymentByTenants: Screens("payment_by_tenants_screen")
 

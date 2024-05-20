@@ -2,8 +2,10 @@
 
 package com.example.kaaproperties.Authentication.email
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -21,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,7 +47,9 @@ import androidx.navigation.NavController
 import com.example.kaaproperties.PropertyViewModel
 import com.example.kaaproperties.Navigation.Screens
 import com.example.kaaproperties.R
+import com.example.kaaproperties.logic.UserData
 import com.example.kaaproperties.screens.components.customButton
+import com.example.kaaproperties.screens.location.signOutUser
 import com.example.kaaproperties.ui.theme.AlegreyaFontFamily
 import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -54,11 +57,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
 import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+private lateinit var auth: FirebaseAuth
+
+@SuppressLint("StaticFieldLeak")
+private lateinit var firebaseFirestore: FirebaseFirestore
+private lateinit var storageRef: StorageReference
 @Composable
 fun welcomeScreen(
     modifier: Modifier = Modifier,
@@ -166,6 +179,7 @@ fun welcomeScreen(
                         .requestEmail()
                         .build()
                     val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                    signOutUser(googleSignInClient)
                     launcher.launch(googleSignInClient.signInIntent)
                 },
                 buttonText = "Sign In with google",
@@ -195,8 +209,26 @@ fun GoogleAuth(
             val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
             scope.launch {
                 val authResult = Firebase.auth.signInWithCredential(credential).await()
+                val user = Firebase.auth.currentUser
+                val email = user?.email
+                val userId = user?.uid
+                val photoUrl = user?.photoUrl.toString()
+                val name = user?.displayName
+                Log.d("saving", "is userId null in ? $userId")
+                Log.d("saving", "profile picture: $photoUrl")
 
-            Toast.makeText(context, "Successful Login   Q1`1`", Toast.LENGTH_SHORT).show()
+                saveUserDataForGoogleAuthentications(
+                    userId = userId,
+                    email = email,
+                    ProfileUrl = photoUrl,
+                    username = name,
+                    age = null,
+                    address = null,
+                    context = context,
+                    navController = navController,
+                    viewModel = null
+                )
+            Toast.makeText(context, "Successful Login", Toast.LENGTH_SHORT).show()
                 navController.navigate(Screens.Locations.route){
                     navController.popBackStack()
                 }
@@ -209,22 +241,75 @@ fun GoogleAuth(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Loginscreen2(viewModel: PropertyViewModel) {
+
+
+
+fun saveUserDataForGoogleAuthentications(
+    userId: String?,
+    email: String?,
+    username: String?,
+    ProfileUrl: String?,
+    address: String?,
+    age: String?,
+    context: Context,
+    navController: NavController,
+    viewModel: PropertyViewModel?,
+) {
+    Log.d("saving", "Entered composable")
+
+    firebaseFirestore = FirebaseFirestore.getInstance()
+    Log.d("saving", "is userId null in composable? $userId")
+
+    val UserData =
+        UserData(
+            userID = userId,
+            email = email,
+            username = username,
+            profilePic = ProfileUrl,
+            address = address,
+            age = age,
+        )
+    Log.d("saving", "is userId null in composable? $userId")
+
+    if (userId != null) {
+        val dbUserData: DocumentReference = firebaseFirestore.collection("Users").document(userId)
+        dbUserData.get()
+            .addOnSuccessListener {
+                if (it.exists()){
+
+                }else{
+                    dbUserData.set(UserData)
+                        .addOnCompleteListener {
+                            Log.d("saving", "saving to firestore")
+
+                            if (it.isSuccessful) {
+                                Toast.makeText(
+                                    context,
+                                    "Created user profile successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navController.navigate(Screens.Locations.route) {
+                                    navController.popBackStack()
+                                }
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    it.exception?.message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                viewModel?.isNotLoading()
+
+                            }
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.d("saving","$exception")
+                        }
+                }
+            }
+
 
 }
-
-@Composable
-fun Loginscreen3(viewModel: PropertyViewModel) {
-
 }
-
-
-
-
-
-
 
 
 

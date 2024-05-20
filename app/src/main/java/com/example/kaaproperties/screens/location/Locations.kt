@@ -1,6 +1,7 @@
 package com.example.kaaproperties.screens.location
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -62,13 +63,16 @@ fun locationsPage(
     navController: NavController,
     onEvents: (Events) -> Unit,
     states: states,
+    context: Context
 
     ) {
     customScaffold(
         navController = navController,
         onEvents = onEvents,
         states = states,
-        ifAdding = { navController.navigate(Screens.AddingLocations.route) },
+        ifAdding = {
+            AddingLocation(states = states, onEvent = onEvents, navController = navController, context = context)
+        },
         titleText = "Locations",
         locationSelected = true,
         titleIcon = R.drawable.baseline_location_on_24,
@@ -98,8 +102,12 @@ fun ListofLocations(
                 val _locationId = location.locationId.toString()
                 var cardHeight = 100.dp
                 customCard(
-                    navigation = { navController.navigate(Screens.Property.withArgs(_locationId, location.locationName)) },
-                    onEvent = { onEvents(Events.selectLocation(location.locationId)) },
+                    navigation = { navController.navigate(Screens.Property.route) },
+                    onEvent = {
+                        onEvents(Events.selectLocation(location.locationId))
+                        Log.d("locationId", states.selectedLocation.locationId.toString() + "in locations")
+                        Log.d("locationId", location.locationId.toString())
+                    },
                     onDeleteEvent = { onEvents(Events.deleteLocation(location)) },
                     text1 = location.locationName,
                     text2 = location.description,

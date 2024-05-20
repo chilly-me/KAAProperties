@@ -146,6 +146,10 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation("androidx.compose.material3:material3:1.3.0-alpha06")
 
+//    implementation (libs.accompanist.systemuicontroller)
+    implementation("androidx.activity:activity-compose:1.8.0-alpha07")
+
+
 
 
 }

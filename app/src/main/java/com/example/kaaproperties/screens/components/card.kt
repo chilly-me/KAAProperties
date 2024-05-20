@@ -1,20 +1,18 @@
 package com.example.kaaproperties.screens.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,14 +33,16 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.kaaproperties.R
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
+import com.example.kaaproperties.room.entities.payments
+import com.example.kaaproperties.room.entities.property
+import com.example.kaaproperties.room.entities.tenant
+import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +54,7 @@ fun customCard(
     text2: String = "",
     text3: String = "",
     text4: String = "",
+    price: String? = null,
     imageList: ArrayList<String>,
     errorId: Int
 ) {
@@ -176,13 +177,29 @@ fun customCard(
                     .padding(end = 10.dp, bottom = 5.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                Column {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    if (price != null){
+                        Box(
+                            modifier = Modifier
+                                .weight(1f),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Text(text = "Ksh. $price", fontFamily = AlegreyoSansFontFamily)
 
-                    IconButton(onClick = { onDeleteEvent()}) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_delete_24),
-                            contentDescription = "Delete "
-                        )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                        .weight(1f),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        IconButton(onClick = { onDeleteEvent()}) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_delete_24),
+                                contentDescription = "Delete "
+                            )
+                        }
+
                     }
 
                 }
@@ -194,9 +211,130 @@ fun customCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun paymentCard(
+    payment: payments,
+    tenant: tenant,
+    property: property,
+    onCall: () -> Unit
+) {
+
+    val tenant = tenant
+    val property = property
+    val payment = payment
+    var color by remember {
+        mutableStateOf(Color.Transparent)
+    }
+    val deficit = 5000
+
+    Log.d("totalDeficit", "$deficit")
+    Log.d("totalDeficit", "${payment.amount}: amount paid")
+    Log.d("totalDeficit", "${property.cost}: cost for property")
+    if (deficit >= 100) {
+        color = Color(0xFFEE4E4E)
+    } else if (deficit == 0) {
+        color = Color(0xFF17A007)
+    }
+    Card(
+        onClick = {
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clip(RectangleShape)
+            .height(300.dp),
+        shape = RectangleShape,
+        border = BorderStroke(0.1.dp, Color.Black),
+        colors = CardDefaults.cardColors(
+            containerColor = color
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+    ) {
 
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+//                .weight(4f)
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Tenant Name:   ${tenant.fullName}",
+                textDecoration = TextDecoration.Underline,
+                fontSize = 25.sp,
+                fontFamily = AlegreyoSansFontFamily,
+                fontWeight = FontWeight(700),
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "Property Name:   ${property.propertyName}",
+                textDecoration = TextDecoration.Underline,
+                fontSize = 18.sp,
+                fontFamily = AlegreyoSansFontFamily,
+                fontWeight = FontWeight(500),
+                color = Color.White
+
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(30.dp)) {
+                coluumnForPayments("Month", payment.month)
+                coluumnForPayments("Cost", "Ksh. ${property.cost}")
+                coluumnForPayments("Paid", "Ksh. ${payment.amount}")
+            }
+            Spacer(modifier = Modifier.weight(0.4f))
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)){
+                Box(modifier = Modifier
+                    .weight(2f)
+                    .fillMaxSize(),
+                    contentAlignment = Alignment.CenterEnd)
+                {
+                    coluumnForPayments(text1 = "Total Deficit", text2 = "Ksh. $deficit")
+                }
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize(),
+                    contentAlignment = Alignment.Center)
+                {
+                    IconButton(onClick = { onCall() }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_phone),
+                            contentDescription = "Call",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+
+        }
+
+    }
+}
+
+@Composable
+fun coluumnForPayments(text1: String, text2: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(15.dp)) {
+        Text(
+            text = text1,
+            textDecoration = TextDecoration.Underline,
+            fontSize = 18.sp,
+            fontFamily = AlegreyoSansFontFamily,
+            color = Color.White
 
 
+        )
+        Text(
+            text = text2,
+            fontSize = 18.sp,
+            fontFamily = AlegreyoSansFontFamily,
+            textAlign = TextAlign.Center,
+            color = Color.White
 
 
+        )
+    }
+}

@@ -17,6 +17,7 @@ import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customButton
 import com.example.kaaproperties.screens.components.customDailog
 import com.example.kaaproperties.screens.components.customTextField2
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,4 +87,7 @@ fun AddingLocation(
 
     )
 
+}
+fun signOutUser(googleSignInClient: GoogleSignInClient) {
+    googleSignInClient.signOut()
 }

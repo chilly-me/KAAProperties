@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
 import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.Navigation.Screens
@@ -23,12 +24,10 @@ import com.example.kaaproperties.screens.components.customTextField2
 fun AddingProperty(
     state: states,
     onEvent: (Events) -> Unit,
-    locationId: String,
     navController: NavController,
     context: Context,
 ) {
-    val _locationId = locationId.toInt()
-    onEvent(Events.setlocationId(_locationId))
+    onEvent(Events.setlocationId(state.selectedLocation.locationId))
 
     var ImageUriList by remember {
         mutableStateOf<List<Uri?>>(emptyList())
@@ -36,7 +35,7 @@ fun AddingProperty(
     customDailog(
         onDismiss = {
             onEvent(Events.NotAdding)
-            navController.navigate(Screens.Property.withArgs(locationId)) {
+            navController.navigate(Screens.Property.route) {
                 navController.popBackStack()
                 Log.d("isStackPopped", "${navController.popBackStack()}")
             }
@@ -82,7 +81,8 @@ fun AddingProperty(
                     )
                 },
                 placeHolder = "40",
-                iconId = null
+                iconId = null,
+                keyboardType = KeyboardType.Number
             )
             customTextField2(
                 value = state.propertyCost,
@@ -92,7 +92,9 @@ fun AddingProperty(
                     )
                 },
                 placeHolder = "Ksh. 10,000",
-                iconId = null
+                iconId = null,
+                keyboardType = KeyboardType.Number
+
             )
         },
         imageUriList = {ImageUriList = it},
@@ -100,7 +102,7 @@ fun AddingProperty(
             customButton(
                 onClick = {
                     onEvent(Events.saveProperty(ImageUriList))
-                    navController.navigate(Screens.Property.withArgs(locationId)) {
+                    navController.navigate(Screens.Property.route) {
                         navController.popBackStack()
                         Log.d("isStackPopped", "${navController.popBackStack()}")
                     }

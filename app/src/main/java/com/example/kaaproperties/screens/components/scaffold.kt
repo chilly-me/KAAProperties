@@ -5,7 +5,6 @@ package com.example.kaaproperties.screens.components
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,7 +45,7 @@ fun customScaffold(
     navController: NavController,
     onEvents: (Events) -> Unit,
     states: states,
-    ifAdding: () -> Unit,
+    ifAdding: @Composable () -> Unit,
     titleText: String,
     locationSelected: Boolean = false,
     propertiesSelected: Boolean = false,
@@ -90,7 +89,7 @@ fun customScaffold(
                     onClick = { navController.navigate(Screens.AllProperty.route) },
                     icon = { Icon(
                         painter = painterResource(id = R.drawable.baseline_location_city_24),
-                        contentDescription = "Property",
+                        contentDescription = "Payments",
                         tint = if (propertiesSelected) {
                             Color.Black
                         } else {
@@ -191,4 +190,3 @@ fun customScaffold(
          }
     }
 }
-

@@ -2,7 +2,6 @@ package com.example.kaaproperties.screens.user
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -46,7 +45,6 @@ import com.example.kaaproperties.logic.Events
 import com.example.kaaproperties.logic.UserData
 import com.example.kaaproperties.logic.states
 import com.example.kaaproperties.screens.components.customButton
-import com.example.kaaproperties.screens.components.customScaffold
 import com.example.kaaproperties.ui.theme.AlegreyoSansFontFamily
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -80,15 +78,18 @@ fun UserProfileScreen(
     var userData by remember(userId) {
         mutableStateOf(UserData())
     }
-    var age by mutableStateOf("")
-
-    var name by mutableStateOf("")
-
-    var username by mutableStateOf("")
-
-    var profilePic by mutableStateOf("")
-
-    var email by  mutableStateOf("")
+    var success by remember {
+        mutableStateOf(true)
+    }
+    var email by remember {
+        mutableStateOf("")
+    }
+    var profilePic by remember {
+        mutableStateOf("")
+    }
+    var name by remember {
+        mutableStateOf("")
+    }
 
     if (userId != null) {
         val userRef = db.collection("Users").document(userId)
@@ -98,33 +99,23 @@ fun UserProfileScreen(
                 if (user != null) {
                     userData = user
                 }
-                age = userData.age
-                name = userData.username
-                profilePic = userData.profilePic
-                email = userData.email
-                username = userData.username
                 isloading = false
+                success = true
 
             }
             .addOnFailureListener {
                 val currentUser = auth.currentUser
-                if (currentUser != null) {
-                    name = currentUser.displayName.toString()
-                }
-                if (currentUser != null) {
-                    email = currentUser.email.toString()
-                }
-                if (currentUser != null) {
-                    profilePic = currentUser.photoUrl.toString()
-                }
+                success = false
+                name = currentUser?.displayName.toString()
+                profilePic= currentUser?.photoUrl.toString()
+                email = currentUser?.email.toString()
 
 
             }
 
 
-        Log.d("UserInfo", "user age: $age, username: $name, profilePic: $profilePic")
     } else {
-        navController.navigate(Screens.Locations.route)
+        navController.navigate(Screens.WelcomeScreen.route)
         Toast.makeText(context, "You are not logged in", Toast.LENGTH_SHORT).show()
     }
     if (isloading) {
@@ -146,119 +137,141 @@ fun UserProfileScreen(
             }
         }
     } else {
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxSize()
-                .background(Color(0xFFF2F1F6)),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ConstraintLayout(
-                modifier = modifier
-                    .height(250.dp)
-                    .background(Color(0xDA035092))
+        if (success){
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .background(Color(0xFFF2F1F6)),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val (topImg, profile, title, back, pen, user) = createRefs()
-                Image(
-                    painter = painterResource(id = R.drawable.arc_3),
-                    contentDescription = null,
+                ConstraintLayout(
                     modifier = modifier
-                        .fillMaxWidth()
-                        .constrainAs(topImg) {
-                            bottom.linkTo(parent.bottom)
-                        },
-                    contentScale = ContentScale.FillBounds
-                )
-                AsyncImage(
-                    model = profilePic,
-                    contentDescription = "Profile Picture",
-                    error = painterResource(id = R.drawable.profile),
-                    placeholder = painterResource(id = R.drawable.profile),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .size(100.dp)
-                        .constrainAs(profile) {
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            bottom.linkTo(topImg.bottom)
-                        },
-                    contentScale = ContentScale.Crop
-                )
-
-                Text(
-                    text = "Profile",
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = 30.sp,
-                    ),
-                    modifier = modifier
-                        .constrainAs(title) {
-                            top.linkTo(parent.top, margin = 24.dp)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            bottom.linkTo(topImg.bottom, margin = 15.dp)
-                        }
-
-
-                )
-                IconButton(
-                    onClick = { navController.navigate(Screens.Locations.route) },
-                    modifier = modifier
-                        .constrainAs(back) {
-                            top.linkTo(parent.top, margin = 24.dp)
-                            start.linkTo(parent.start, margin = 24.dp)
-
-                        }
+                        .height(250.dp)
+                        .background(Color(0xDA035092))
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
+                    val (topImg, profile, title, back, pen, user) = createRefs()
+                    Image(
+                        painter = painterResource(id = R.drawable.arc_3),
                         contentDescription = null,
-                        tint = Color.White
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .constrainAs(topImg) {
+                                bottom.linkTo(parent.bottom)
+                            },
+                        contentScale = ContentScale.FillBounds
+                    )
+                    AsyncImage(
+                        model = userData.profilePic,
+                        contentDescription = "Profile Picture",
+                        error = painterResource(id = R.drawable.profile),
+                        placeholder = painterResource(id = R.drawable.profile),
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(100.dp)
+                            .constrainAs(profile) {
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(topImg.bottom)
+                            },
+                        contentScale = ContentScale.Crop
                     )
 
+                    Text(
+                        text = "Profile",
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = 30.sp,
+                        ),
+                        modifier = modifier
+                            .constrainAs(title) {
+                                top.linkTo(parent.top, margin = 24.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(topImg.bottom, margin = 15.dp)
+                            }
+
+
+                    )
+                    IconButton(
+                        onClick = { navController.navigate(Screens.Locations.route) },
+                        modifier = modifier
+                            .constrainAs(back) {
+                                top.linkTo(parent.top, margin = 24.dp)
+                                start.linkTo(parent.start, margin = 24.dp)
+
+                            }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+
+                    }
+
+
+                }
+                userData.username?.let {
+                    Text(
+                        text = it,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(
+                            color = Color(0xFF32357A)
+                        ),
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                    )
                 }
 
-
-            }
-            username?.let {
-                Text(
-                    text = it,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    style = TextStyle(
-                        color = Color(0xFF32357A)
-                    ),
-                    modifier = Modifier
-                        .padding(top = 16.dp)
+                userData.email?.let {
+                    customRow(
+                        imgId = R.drawable.ic_email,
+                        contentDescription = "Email",
+                        text = it
+                    )
+                }
+                userData.age?.let { customRow(imgId = R.drawable.ic_age, contentDescription = "Age", text = it) }
+                userData.address?.let {
+                    customRow(
+                        imgId = R.drawable.ic_address,
+                        contentDescription = "Email",
+                        text = it
+                    )
+                }
+                Spacer(modifier = Modifier.weight(0.4f))
+                customButton(
+                    onClick = {
+                        auth.signOut()
+                        Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+                        navController.navigate(Screens.WelcomeScreen.route)
+                    },
+                    color = 0xFFFA2323,
+                    buttonText = "Sign Out",
+                    iconId = null,
+                    width = 0.8f
                 )
+
+
             }
-            customRow(imgId = R.drawable.ic_email, contentDescription = "Email", text = email)
-            customRow(imgId = R.drawable.ic_age, contentDescription = "Age", text = userData.age)
-            customRow(
-                imgId = R.drawable.ic_address,
-                contentDescription = "Email",
-                text = userData.address
+        }else{
+            GoogleAuthenticated(
+                profileImage = profilePic,
+                navController = navController,
+                userName = name,
+                email = email,
+                context = context
             )
-            Spacer(modifier = Modifier.weight(0.4f))
-            customButton(
-                onClick = {
-                    auth.signOut()
-                    Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
-                    navController.navigate(Screens.WelcomeScreen.route)
-                },
-                color = 0xFFFA2323,
-                buttonText = "Sign Out",
-                iconId = null,
-                width = 0.8f
-            )
-
-
         }
+
+
     }
 
 
 }
+
+
 
 
 @Composable
@@ -318,5 +331,121 @@ fun customRow(
             )
 
         }
+    }
+}
+
+@Composable
+fun GoogleAuthenticated(
+    modifier: Modifier = Modifier,
+    profileImage: String,
+    navController: NavController,
+    userName: String,
+    email: String,
+    context: Context
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize()
+            .background(Color(0xFFF2F1F6)),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ConstraintLayout(
+            modifier = modifier
+                .height(250.dp)
+                .background(Color(0xDA035092))
+        ) {
+            val (topImg, profile, title, back, pen, user) = createRefs()
+            Image(
+                painter = painterResource(id = R.drawable.arc_3),
+                contentDescription = null,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .constrainAs(topImg) {
+                        bottom.linkTo(parent.bottom)
+                    },
+                contentScale = ContentScale.FillBounds
+            )
+            AsyncImage(
+                model = profileImage,
+                contentDescription = "Profile Picture",
+                error = painterResource(id = R.drawable.profile),
+                placeholder = painterResource(id = R.drawable.profile),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(100.dp)
+                    .constrainAs(profile) {
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(topImg.bottom)
+                    },
+                contentScale = ContentScale.Crop
+            )
+
+            Text(
+                text = "Profile",
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 30.sp,
+                ),
+                modifier = modifier
+                    .constrainAs(title) {
+                        top.linkTo(parent.top, margin = 24.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(topImg.bottom, margin = 15.dp)
+                    }
+
+
+            )
+            IconButton(
+                onClick = { navController.navigate(Screens.Locations.route) },
+                modifier = modifier
+                    .constrainAs(back) {
+                        top.linkTo(parent.top, margin = 24.dp)
+                        start.linkTo(parent.start, margin = 24.dp)
+
+                    }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = null,
+                    tint = Color.White
+                )
+
+            }
+
+
+        }
+        Text(
+            text = userName,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            style = TextStyle(
+                color = Color(0xFF32357A)
+            ),
+            modifier = Modifier
+                .padding(top = 16.dp)
+        )
+
+        customRow(
+            imgId = R.drawable.ic_email,
+            contentDescription = "Email",
+            text = email
+        )
+        Spacer(modifier = Modifier.weight(0.4f))
+        customButton(
+            onClick = {
+                auth.signOut()
+                Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+                navController.navigate(Screens.WelcomeScreen.route)
+            },
+            color = 0xFFFA2323,
+            buttonText = "Sign Out",
+            iconId = null,
+            width = 0.8f
+        )
+
+
     }
 }

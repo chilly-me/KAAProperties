@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -136,7 +137,8 @@ fun LoginLayout(
                     onValueChange = {
                         email = it
                     },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    keyboardType = KeyboardType.Email
                 )
                 customPasswordTextField(
                     value = password,
@@ -255,6 +257,7 @@ fun LoginUser(email: String, password: String, context: Context, navController: 
             Toast.makeText(
                 context, "You have logged into your account successfully", Toast.LENGTH_SHORT
             ).show()
+
             navController.navigate(Screens.Locations.route){
                 navController.popBackStack()
             }

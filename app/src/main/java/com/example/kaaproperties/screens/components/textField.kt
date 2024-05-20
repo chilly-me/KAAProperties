@@ -78,6 +78,8 @@ fun customTextField(
             focusedTextColor = Color.White,
             unfocusedIndicatorColor = Color.White,
             focusedIndicatorColor = Color.White,
+            disabledContainerColor = Color.Transparent
+
         ),
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
@@ -161,6 +163,7 @@ fun customPasswordTextField(
             focusedTextColor = Color.White,
             unfocusedIndicatorColor = Color.White,
             focusedIndicatorColor = Color.White,
+            disabledContainerColor = Color.Transparent
         ),
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
@@ -214,6 +217,8 @@ fun customTextField2(
             focusedTextColor = Color.White,
             unfocusedIndicatorColor = Color.White,
             focusedIndicatorColor = Color.White,
+            disabledContainerColor = Color.Transparent
+
         ),
         singleLine = singleLine,
         keyboardOptions = KeyboardOptions(

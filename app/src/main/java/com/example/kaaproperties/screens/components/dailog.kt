@@ -51,7 +51,7 @@ fun customDailog(
     headerText: String,
     content: @Composable () -> Unit,
     saveButton: @Composable () -> Unit,
-    imageUriList: (List<Uri>) -> Unit,
+    imageUriList: ((List<Uri>) -> Unit)?,
     image: @Composable (() -> Unit)? = null
 ) {
     Dialog(onDismissRequest = { onDismiss() }) {
@@ -116,14 +116,16 @@ fun customDailog(
             }
             Text(text = headerText, fontSize = 20.sp, fontFamily = AlegreyoSansFontFamily)
             Spacer(modifier = Modifier.height(20.dp))
-            if (image == null){
+            if (image == null && imageUriList != null){
                 var ImageUriList by remember {
                     mutableStateOf<List<Uri?>>(emptyList())
                 }
                 val launcher =
                     rememberLauncherForActivityResult(contract = ActivityResultContracts.GetMultipleContents()) { uriList ->
                         ImageUriList = uriList
-                        imageUriList(uriList)
+                        if (imageUriList != null) {
+                            imageUriList(uriList)
+                        }
                     }
                 if (!ImageUriList.isEmpty()) {
                     Row {
@@ -157,7 +159,9 @@ fun customDailog(
                     )
                 }
             }else{
-                image()
+                if (image != null) {
+                    image()
+                }
             }
 
 

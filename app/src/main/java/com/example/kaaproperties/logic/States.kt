@@ -31,5 +31,8 @@ data class states(
     val isAdding: Boolean = false,
     val hasPaidRent: Boolean = false,
     val active: Boolean = true,
-    val key: Int = 0
+    val key: Int = 0,
+    val tenantId: Int = 0,
+    val amount: String = "",
+    val month: String = "",
 )
